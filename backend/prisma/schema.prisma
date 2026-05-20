@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Asignaciones {
+  id_asignacion   Int             @id(map: "PK__Asignaci__C3F7F966F1C8D4AE") @default(autoincrement())
+  id_docente      Int
+  id_curso        Int
+  id_periodo      Int
+  seccion         String          @db.NVarChar(10)
+  cupo_disponible Int
+  estado          Boolean         @default(true, map: "DF__Asignacio__estad__6754599E")
+  Cursos          Cursos          @relation(fields: [id_curso], references: [id_curso], onUpdate: NoAction, map: "FK_Asignaciones_Cursos")
+  Docentes        Docentes        @relation(fields: [id_docente], references: [id_docente], onUpdate: NoAction, map: "FK_Asignaciones_Docentes")
+  Periodos        Periodos        @relation(fields: [id_periodo], references: [id_periodo], onUpdate: NoAction, map: "FK_Asignaciones_Periodos")
+  Inscripciones   Inscripciones[]
+}
+
+model Carreras {
+  id_carrera  Int           @id(map: "PK__Carreras__82525F2662FCC6E9") @default(autoincrement())
+  nombre      String        @unique(map: "UQ__Carreras__72AFBCC67D3F9912") @db.NVarChar(100)
+  descripcion String?       @db.NVarChar(255)
+  estado      Boolean       @default(true, map: "DF__Carreras__estado__5070F446")
+  Cursos      Cursos[]
+  Estudiantes Estudiantes[]
+}
+
+model Cursos {
+  id_curso     Int            @id(map: "PK__Cursos__5D3F75020DA028B8") @default(autoincrement())
+  codigo       String         @unique(map: "UQ__Cursos__40F9A20618B23F24") @db.NVarChar(20)
+  nombre       String         @db.NVarChar(100)
+  creditos     Int
+  cupo_maximo  Int
+  id_carrera   Int
+  estado       Boolean        @default(true, map: "DF__Cursos__estado__5FB337D6")
+  Asignaciones Asignaciones[]
+  Carreras     Carreras       @relation(fields: [id_carrera], references: [id_carrera], onUpdate: NoAction, map: "FK_Cursos_Carreras")
+}
+
+model Docentes {
+  id_docente   Int            @id(map: "PK__Docentes__300DB211CABD6E05") @default(autoincrement())
+  id_usuario   Int            @unique(map: "UQ__Docentes__4E3E04AC2CEAE819")
+  especialidad String?        @db.NVarChar(100)
+  estado       Boolean        @default(true, map: "DF__Docentes__estado__5AEE82B9")
+  Asignaciones Asignaciones[]
+  Usuarios     Usuarios       @relation(fields: [id_usuario], references: [id_usuario], onUpdate: NoAction, map: "FK_Docentes_Usuarios")
+}
+
+model Estudiantes {
+  id_estudiante Int             @id(map: "PK__Estudian__E0B2763CFBF62014") @default(autoincrement())
+  id_usuario    Int             @unique(map: "UQ__Estudian__4E3E04ACFAA11312")
+  carnet        String          @unique(map: "UQ__Estudian__4CDEAA6EFF6905FB") @db.NVarChar(20)
+  id_carrera    Int
+  estado        Boolean         @default(true, map: "DF__Estudiant__estad__5535A963")
+  Carreras      Carreras        @relation(fields: [id_carrera], references: [id_carrera], onUpdate: NoAction, map: "FK_Estudiantes_Carreras")
+  Usuarios      Usuarios        @relation(fields: [id_usuario], references: [id_usuario], onUpdate: NoAction, map: "FK_Estudiantes_Usuarios")
+  Inscripciones Inscripciones[]
+}
+
+model Inscripciones {
+  id_inscripcion    Int          @id(map: "PK__Inscripc__CB0117BA574E3B67") @default(autoincrement())
+  id_estudiante     Int
+  id_asignacion     Int
+  fecha_inscripcion DateTime     @default(now(), map: "DF__Inscripci__fecha__6E01572D") @db.DateTime
+  estado            Boolean      @default(true, map: "DF__Inscripci__estad__6EF57B66")
+  Asignaciones      Asignaciones @relation(fields: [id_asignacion], references: [id_asignacion], onUpdate: NoAction, map: "FK_Inscripciones_Asignaciones")
+  Estudiantes       Estudiantes  @relation(fields: [id_estudiante], references: [id_estudiante], onUpdate: NoAction, map: "FK_Inscripciones_Estudiantes")
+  Notas             Notas?
+
+  @@unique([id_estudiante, id_asignacion], map: "UQ_Inscripcion_Unica")
+}
+
+model Notas {
+  id_nota        Int           @id(map: "PK__Notas__26991D8C2BEDA09E") @default(autoincrement())
+  id_inscripcion Int           @unique(map: "UQ__Notas__CB0117BB1DEDC563")
+  nota_final     Decimal       @db.Decimal(5, 2)
+  estado         Boolean       @default(true, map: "DF__Notas__estado__74AE54BC")
+  Inscripciones  Inscripciones @relation(fields: [id_inscripcion], references: [id_inscripcion], onUpdate: NoAction, map: "FK_Notas_Inscripciones")
+}
+
+model Periodos {
+  id_periodo   Int            @id(map: "PK__Periodos__801188B7883101E8") @default(autoincrement())
+  nombre       String         @unique(map: "UQ__Periodos__72AFBCC64EFD107F") @db.NVarChar(50)
+  fecha_inicio DateTime       @db.Date
+  fecha_fin    DateTime       @db.Date
+  estado       Boolean        @default(true, map: "DF__Periodos__estado__6477ECF3")
+  Asignaciones Asignaciones[]
+}
+
+model Usuarios {
+  id_usuario     Int          @id(map: "PK__Usuarios__4E3E04AD1A963AE8") @default(autoincrement())
+  nombre         String       @db.NVarChar(100)
+  apellido       String       @db.NVarChar(100)
+  correo         String       @unique(map: "UQ__Usuarios__2A586E0BCB6DADD4") @db.NVarChar(150)
+  password_hash  String       @db.NVarChar(255)
+  rol            String       @db.NVarChar(20)
+  estado         Boolean      @default(true, map: "DF__Usuarios__estado__4BAC3F29")
+  fecha_creacion DateTime     @default(now(), map: "DF__Usuarios__fecha___4CA06362") @db.DateTime
+  Docentes       Docentes?
+  Estudiantes    Estudiantes?
+}
