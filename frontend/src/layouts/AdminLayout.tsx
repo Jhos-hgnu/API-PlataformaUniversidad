@@ -1,17 +1,6 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Users, 
-  GraduationCap, 
-  UserPlus, 
-  FileText, 
-  Settings, 
-  LogOut,
-  Search,
-  Bell,
-  User as UserIcon
-} from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { LayoutDashboard, Users, GraduationCap, UserPlus, FileText, Settings, LogOut, Search, Bell, User as UserIcon } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -63,7 +52,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab })
         {/* PERFIL EN EL MENÚ */}
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center space-x-3 p-2 bg-white/5 rounded-2xl mb-2">
-            <div className="w-9 h-9 bg-gradient-to-tr from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white border-2 border-white/20">
+            <div className="w-9 h-9 bg-linear-to-tr from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white border-2 border-white/20">
               <UserIcon size={18} />
             </div>
             <div className="flex-1 overflow-hidden">
