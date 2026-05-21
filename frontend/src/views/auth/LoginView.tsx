@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import type { Role } from '../../context/AuthContext';
+import { useAuth } from '../../context/useAuth';
+import type { Role } from '../../context/authTypes';
+import { getThemeStyles } from '../../utils/themeStyles';
 import { AtSign, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // 👈 ¡Faltaba esta importación crucial!
+import { useNavigate } from 'react-router-dom'; 
 
 export const LoginView: React.FC = () => {
-  const { login, user } = useAuth(); // 👥 Agrupamos los elementos del AuthContext limpios
+  const { login, user, theme } = useAuth(); 
+  const styles = getThemeStyles(theme);
   const navigate = useNavigate();
   
   const [correo, setCorreo] = useState('');
@@ -14,7 +16,6 @@ export const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔄 Si el estado global cambia y detecta al ADMIN, lo manda a la raíz donde App.tsx decidirá
   React.useEffect(() => {
     if (user?.rol === 'ADMIN') {
       navigate('/', { replace: true });
@@ -30,7 +31,6 @@ export const LoginView: React.FC = () => {
       return;
     }
 
-    // Datos simulados según tu patrón de correos
     let mockRol: Role = 'ESTUDIANTE';
     let mockNombre = 'Alex';
 
@@ -51,12 +51,11 @@ export const LoginView: React.FC = () => {
 
     const mockToken = 'jwt-fake-token-response';
     
-    // Al ejecutar esta función, 'user' cambia, se activa el useEffect de arriba y te redirige
     login(mockToken, mockUser);
   };
 
   return (
-    <div className="fixed inset-0 h-screen w-screen bg-white flex flex-col items-center justify-center p-2 font-sans antialiased overflow-hidden select-none m-0 box-border">
+    <div className={`fixed inset-0 h-screen w-screen flex flex-col items-center justify-center p-2 font-sans antialiased overflow-hidden select-none m-0 box-border transition-all duration-300 ${styles.page}`}>
       
       {/* Encabezado / Logo */}
       <div className="flex flex-col items-center mb-3 text-center">
@@ -76,7 +75,7 @@ export const LoginView: React.FC = () => {
       </div>
 
       {/* Tarjeta de Login Principal */}
-      <div className="w-full max-w-[380px] bg-white rounded-2xl border border-gray-200 shadow-xl shadow-gray-200 p-6 box-border">
+      <div className={`w-full max-w-95 rounded-2xl border ${styles.border} ${styles.panel} shadow-xl ${styles.shadow} p-6 box-border`}>
         
         <div className="text-center">
           <h2 
@@ -113,7 +112,7 @@ export const LoginView: React.FC = () => {
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
                 placeholder="usuario@miumg.edu.gt"
-                className="w-full bg-white text-black text-xs pl-9 pr-3 py-2 rounded-lg border border-gray-300 focus:border-[#1a365d] focus:ring-2 focus:ring-[#1a365d]/10 outline-none transition-all placeholder:text-gray-300"
+                className={`w-full text-xs pl-9 pr-3 py-2 rounded-lg focus:outline-none transition-all ${styles.input} ${styles.border}`}
               />
             </div>
           </div>
@@ -133,7 +132,7 @@ export const LoginView: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white text-black text-xs pl-9 pr-10 py-2 rounded-lg border border-gray-300 focus:border-[#1a365d] focus:ring-2 focus:ring-[#1a365d]/10 outline-none transition-all placeholder:text-gray-300 tracking-widest"
+                className={`w-full text-xs pl-9 pr-10 py-2 rounded-lg focus:outline-none transition-all ${styles.input} ${styles.border} tracking-widest`}
               />
               <button
                 type="button"
@@ -164,7 +163,7 @@ export const LoginView: React.FC = () => {
           {/* Botón de Iniciar Sesión */}
           <button
             type="submit"
-            className="w-full bg-[#1a365d] hover:bg-[#142a4a] text-white font-bold py-2 px-3 rounded-lg shadow-md shadow-[#1a365d]/10 flex items-center justify-center space-x-1.5 transition-all active:scale-[0.99] cursor-pointer text-xs"
+            className={`w-full py-2 px-3 rounded-lg shadow-md ${styles.shadow} flex items-center justify-center space-x-1.5 transition-all active:scale-[0.99] cursor-pointer text-xs ${styles.buttonPrimary}`}
           >
             <span>Iniciar Sesión</span>
             <ArrowRight size={14} strokeWidth={2.5} />

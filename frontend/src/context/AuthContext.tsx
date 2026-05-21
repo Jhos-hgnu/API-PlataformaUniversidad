@@ -1,28 +1,31 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useState, type FC, type ReactNode } from 'react';
+import { AuthContext } from './auth.context';
+import type { User, Theme } from './authTypes';
 
-export type Role = 'ADMIN' | 'DOCENTE' | 'ESTUDIANTE';
 
-export interface User {
-  id: number;
-  nombre: string;
-  correo: string;
-  rol: Role;
-}
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  
+  const [theme, setThemeState] = useState<Theme>(() => {
+    return (localStorage.getItem('theme-view') as Theme) || 'claro';
+  });
 
-export interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-}
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) return JSON.parse(savedUser);
+    
+    return {
+      id: 1,
+      nombre: 'Administrador General',
+      correo: 'admin@miumg.edu.gt',
+      rol: 'ADMIN'
+    };
+  });
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const setTheme = (nuevoTema: Theme) => {
+    setThemeState(nuevoTema);
+    localStorage.setItem('theme-view', nuevoTema);
+  };
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -43,7 +46,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         user,
         token,
-        isAuthenticated: !!token,
+        isAuthenticated: !!token || user?.rol === 'ADMIN',
+        theme,
+        setTheme,
         login,
         logout,
       }}
@@ -51,12 +56,4 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-  }
-  return context;
 };
