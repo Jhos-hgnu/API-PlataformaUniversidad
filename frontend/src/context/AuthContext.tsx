@@ -3,10 +3,12 @@ import { AuthContext } from './auth.context';
 import type { User, Theme } from './authTypes';
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
-  
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
+
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem('theme-view') as Theme) || 'claro';
+    return (localStorage.getItem("theme-view") as Theme) || "claro";
   });
 
   const [user, setUser] = useState<User | null>(() => {
@@ -26,21 +28,21 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const setTheme = (nuevoTema: Theme) => {
     setThemeState(nuevoTema);
-    localStorage.setItem('theme-view', nuevoTema);
+    localStorage.setItem("theme-view", nuevoTema);
   };
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   return (
