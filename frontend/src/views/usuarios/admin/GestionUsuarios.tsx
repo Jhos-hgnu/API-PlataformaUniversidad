@@ -22,7 +22,7 @@ export const GestionUsuarios: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null);
 
-  // Estados del Formulario (para crear y editar)
+  // Estados del Formulario
   const [formNombre, setFormNombre] = useState('');
   const [formCorreo, setFormCorreo] = useState('');
   const [formRol, setFormRol] = useState<'Admin' | 'Docente' | 'Estudiante'>('Estudiante');
@@ -179,7 +179,7 @@ export const GestionUsuarios: React.FC = () => {
             </div>
             <button 
               onClick={handleNuevoUsuarioClick}
-              className="flex items-center space-x-1.5 px-4 py-2 bg-[#1a365d] text-white text-xs font-bold rounded-xl hover:bg-[#152c4d] transition-colors shadow-xs cursor-pointer"
+              className={`flex items-center space-x-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
             >
               <Plus size={14} />
               <span>Nuevo Usuario</span>
@@ -272,7 +272,7 @@ export const GestionUsuarios: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL DINÁMICO (NUEVO / EDITAR USUARIO) */}
+      {/* NUEVO / EDITAR USUARIO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
           <div className={`rounded-2xl w-full max-w-md p-6 shadow-2xl border ${styles.border} ${styles.panel} animate-in fade-in zoom-in-95 duration-150`}>
@@ -341,8 +341,8 @@ export const GestionUsuarios: React.FC = () => {
                   Cancelar
                 </button>
                 <button 
-                  type="submit"
-                  className="px-4 py-2 bg-[#1a365d] text-white font-bold text-xs rounded-xl hover:bg-[#152c4d] transition-colors shadow-xs cursor-pointer"
+                  type="submit" 
+                  className={`px-4 py-2 text-white font-bold text-xs rounded-xl transition-all shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
                 >
                   {editingUsuario ? 'Guardar Cambios' : 'Registrar Cuenta'}
                 </button>

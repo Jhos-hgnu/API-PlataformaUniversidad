@@ -39,14 +39,14 @@ export const Asignaciones: React.FC = () => {
   const [aula, setAula] = useState('Salón 302');
   const [cupoMaximo, setCupoMaximo] = useState(45);
 
-  // Datos de Producción Simulados (Ciclo UMG)
+  // Datos de Producción Simulados
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([
     {
       id: 'as-1',
       carreraNombre: 'Ingeniería en Sistemas de Información',
       cursoCodigo: '090001',
       cursoNombre: 'Programación I',
-      docenteNombre: 'Ing. Roberto Sánchez',
+      docenteNombre: 'Ing. Richard Ortíz',
       seccion: 'A',
       dias: 'Lunes y Miércoles',
       horario: '18:15 - 19:45',
@@ -233,7 +233,7 @@ export const Asignaciones: React.FC = () => {
 
           <button 
             onClick={handleNuevaAsignacion}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-[#1a365d] text-white text-xs font-bold rounded-xl hover:bg-[#152c4d] transition-colors shadow-xs cursor-pointer"
+            className={`flex items-center space-x-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
           >
             <Plus size={14} />
             <span>Nueva Asignación</span>
@@ -353,7 +353,7 @@ export const Asignaciones: React.FC = () => {
       {/* CREAR / EDITAR ASIGNACIÓN */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
-          <div className={`rounded-2xl w-full max-w-lg p-6 shadow-2xl border ${styles.border} ${styles.panel} text-left`}>
+          <div className={`rounded-2xl w-full max-w-lg p-6 shadow-2xl border ${styles.border} ${styles.panel} text-left animate-in fade-in zoom-in-95 duration-150`}>
             
             <div className={`flex items-center justify-between border-b ${styles.border} pb-3`}>
               <h3 className="text-base font-bold text-slate-800">
@@ -429,7 +429,11 @@ export const Asignaciones: React.FC = () => {
               {/* Botoneras */}
               <div className="pt-3 border-t border-gray-100 flex justify-end space-x-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-gray-200 text-gray-500 font-bold text-xs rounded-xl hover:bg-gray-50 cursor-pointer">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-[#1a365d] text-white font-bold text-xs rounded-xl hover:bg-[#152c4d] cursor-pointer shadow-xs">
+                {/* BOTÓN DEL FORMULARIO */}
+                <button 
+                  type="submit" 
+                  className={`px-4 py-2 text-white font-bold text-xs rounded-xl transition-all active:scale-95 shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
+                >
                   {editingAsignacion ? 'Aplicar Cambios' : 'Aperturar Horario'}
                 </button>
               </div>
