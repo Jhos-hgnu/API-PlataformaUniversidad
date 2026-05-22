@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/useAuth';
 import type { Role } from '../../context/authTypes';
 import { getThemeStyles } from '../../utils/themeStyles';
-import { AtSign, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { 
+  AtSign, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  ArrowRight,
+  BookOpen,
+  FolderOpen,
+  FileText,
+  MessageSquare,
+  CheckCircle,
+  AlertTriangle,
+  Clock
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
+import { EstudianteLayout } from '../../layouts/EstudianteLayout';
 
 export const LoginView: React.FC = () => {
   const { login, user, theme } = useAuth(); 
@@ -16,23 +30,27 @@ export const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  // CONTROL DE FLUJO ACADÉMICO / REDIRECCIÓN
+  useEffect(() => {
     if (user?.rol === 'ADMIN') {
       navigate('/', { replace: true });
     }
+    // Si tu enrutador principal delega el renderizado directo en la raíz,
+    // el estado de autenticación cambiará y mostrará el contenido condicional de abajo.
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // Validación obligatoria de correo institucional solicitada por el grupo
     if (!correo.toLowerCase().endsWith('@miumg.edu.gt')) {
       setError('Acceso denegado. Debe utilizar su correo institucional (@miumg.edu.gt).');
       return;
     }
 
     let mockRol: Role = 'ESTUDIANTE';
-    let mockNombre = 'Alex';
+    let mockNombre = 'Alex Rivera';
 
     if (correo.toLowerCase().includes('admin')) {
       mockRol = 'ADMIN';
@@ -42,6 +60,7 @@ export const LoginView: React.FC = () => {
       mockNombre = 'Dr. Ricardo Arjona';
     }
 
+    // Datos estructurados compatibles con los endpoints de NestJS del backend
     const mockUser = {
       id: 1,
       nombre: mockNombre,
@@ -54,6 +73,136 @@ export const LoginView: React.FC = () => {
     login(mockToken, mockUser);
   };
 
+  // =========================================================================
+  // RENDERIZADO DEL DASHBOARD DE ESTUDIANTE (Si el usuario ya se autenticó)
+  // =========================================================================
+  if (user?.rol === 'ESTUDIANTE') {
+    // Datos simulados estructurados en base al modelo Entidad-Relación del PDF
+    const actividadesRecientes = [
+      { id: 1, tipo: 'calificacion', titulo: 'Calificación publicada: Proyecto Final', subtitulo: 'Sistemas Operativos II • 95/100', haceCuanto: 'Hace 2h' },
+      { id: 2, tipo: 'aviso', titulo: 'Nuevo aviso de Coordinación', subtitulo: 'Calendario de exámenes finales actualizado.', haceCuanto: 'Hace 5h' },
+      { id: 3, tipo: 'mensaje', titulo: 'Mensaje de Catedrático', subtitulo: 'Re: Consulta sobre laboratorio 3 de Base de Datos', haceCuanto: 'Ayer' },
+    ];
+
+    const cursosActivos = [
+      { codigo: 'SIS-002', nombre: 'Sistemas Operativos II', creditos: 5 },
+      { codigo: 'BD2-003', nombre: 'Base de Datos II', creditos: 4 },
+      { codigo: 'AN-001', nombre: 'Análisis de Sistemas I', creditos: 4 },
+    ];
+
+    return (
+      <EstudianteLayout activeTab="tablero">
+        <div className="space-y-8 animate-fadeIn">
+          
+          {/* Fila de Bienvenida */}
+          <div>
+            <h2 className="text-2xl font-black text-gray-800 tracking-tight">
+              Bienvenido de nuevo, {user.nombre.split(' ')[0]} 👋
+            </h2>
+            <p className="text-gray-500 text-xs font-semibold mt-0.5">
+              Ciclo Académico Activo: Primer Semestre 2026
+            </p>
+          </div>
+
+          {/* TARJETAS KPI METRICAS (Estilo Stitch / Admin unificado) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* KPI 1: Cursos Activos */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">Asignados</span>
+                <h3 className="text-3xl font-black text-gray-800 mt-3">{cursosActivos.length}</h3>
+                <p className="text-gray-500 text-xs font-bold mt-1">Cursos Inscritos</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                <FolderOpen size={24} />
+              </div>
+            </div>
+
+            {/* KPI 2: Promedio Ponderado */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">Eficiencia</span>
+                <h3 className="text-3xl font-black text-gray-800 mt-3">88.5</h3>
+                <p className="text-gray-500 text-xs font-bold mt-1">Promedio General</p>
+              </div>
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                <FileText size={24} />
+              </div>
+            </div>
+
+            {/* KPI 3: Alertas Pendientes */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">Pendiente</span>
+                <h3 className="text-3xl font-black text-gray-800 mt-3">1</h3>
+                <p className="text-gray-500 text-xs font-bold mt-1">Pagos / Solicitudes</p>
+              </div>
+              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                <AlertTriangle size={24} />
+              </div>
+            </div>
+
+          </div>
+
+          {/* SECCIÓN DIVIDIDA: CURSOS ACTUALES Y ACTIVIDADES */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Panel Principal Izquierdo: Cursos Asignados */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2">
+              <div className="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
+                <h3 className="font-black text-gray-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <BookOpen size={18} className="text-[#1a365d]" /> Mis Cursos Asignados
+                </h3>
+              </div>
+              <div className="space-y-2">
+                {cursosActivos.map((curso, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50/60 hover:bg-gray-50 border border-gray-100 rounded-xl transition-all">
+                    <div>
+                      <h4 className="font-bold text-xs text-gray-800">{curso.nombre}</h4>
+                      <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{curso.codigo} • {curso.creditos} Créditos</p>
+                    </div>
+                    <button className="px-3 py-1 bg-white hover:bg-[#1a365d] hover:text-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-bold transition-all shadow-2xs">
+                      Ver Aula
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Panel Secundario Derecho: Historial / Actividad */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+              <h3 className="font-black text-gray-800 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-gray-50 pb-3">
+                <Clock size={18} className="text-[#1a365d]" /> Notificaciones
+              </h3>
+              <div className="space-y-3">
+                {actividadesRecientes.map((act) => (
+                  <div key={act.id} className="flex gap-3 text-left">
+                    <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center mt-0.5 ${
+                      act.tipo === 'calificacion' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+                    }`}>
+                      {act.tipo === 'calificacion' ? <CheckCircle size={16} /> : <MessageSquare size={16} />}
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="font-bold text-xs text-gray-800 truncate">{act.titulo}</h4>
+                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{act.subtitulo}</p>
+                      <span className="text-[9px] text-gray-400 font-bold block mt-1">{act.haceCuanto}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </EstudianteLayout>
+    );
+  }
+
+  // =========================================================================
+  // RENDERIZADO DE LA INTERFAZ DE LOGIN (Por defecto / No autenticado)
+  // =========================================================================
   return (
     <div className={`fixed inset-0 h-screen w-screen flex flex-col items-center justify-center p-2 font-sans antialiased overflow-hidden select-none m-0 box-border transition-all duration-300 ${styles.page}`}>
       
