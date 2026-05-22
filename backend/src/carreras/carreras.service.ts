@@ -1,26 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCarreraDto } from './dto/create-carrera.dto';
 import { UpdateCarreraDto } from './dto/update-carrera.dto';
 
 @Injectable()
 export class CarrerasService {
-  create(createCarreraDto: CreateCarreraDto) {
-    return 'This action adds a new carrera';
+  constructor(private prisma: PrismaService) {}
+
+  async create(dto: CreateCarreraDto) {
+    const existing = await this.prisma.carreras.findUnique({
+      where: { nombre: dto.nombre },
+    });
+    if (existing) throw new ConflictException('La carrera ya existe');
+
+    return this.prisma.carreras.create({ data: dto });
   }
 
-  findAll() {
-    return `This action returns all carreras`;
+  async findAll() {
+    return this.prisma.carreras.findMany({
+      where: { estado: true },
+      include: { Cursos: true },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} carrera`;
+  async findOne(id: number) {
+    const carrera = await this.prisma.carreras.findUnique({
+      where: { id_carrera: id },
+      include: { Cursos: true },
+    });
+    if (!carrera) throw new NotFoundException('Carrera no encontrada');
+    return carrera;
   }
 
-  update(id: number, updateCarreraDto: UpdateCarreraDto) {
-    return `This action updates a #${id} carrera`;
+  async update(id: number, dto: UpdateCarreraDto) {
+    await this.findOne(id);
+    return this.prisma.carreras.update({
+      where: { id_carrera: id },
+      data: dto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} carrera`;
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.carreras.update({
+      where: { id_carrera: id },
+      data: { estado: false },
+    });
   }
 }
