@@ -78,68 +78,74 @@ export const Configuracion: React.FC = () => {
         
         {/* BLOQUE DE SELECCIÓN DE TEMAS */}
         <div className="lg:col-span-2 space-y-6">
-          <div className={`border rounded-2xl p-5 shadow-xs transition-all duration-300 ${c.card}`}>
+          <div className={`border rounded-2xl p-5 transition-all duration-300 ${c.card}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-4">
               <Palette size={14} />
               <span>Personalización Visual (Temas de la Web)</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Tema Claro */}
-              <button
-                type="button"
-                onClick={() => setTheme('claro')}
-                className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-24 ${
-                  theme === 'claro' ? 'border-[#1a365d] ring-2 ring-blue-100 bg-blue-50/10' : 'border-gray-200 bg-white'
-                }`}
+             {/* Tema Claro */}
+             <button
+               type="button"
+               onClick={() => setTheme('claro')}
+               className={`p-4 rounded-xl border text-left transition-all duration-300 cursor-pointer flex flex-col justify-between h-24 active:scale-95 ${
+                 theme === 'claro' 
+                   ? 'border-[#1a365d] ring-2 ring-blue-100 bg-blue-50/10 text-slate-800' 
+                   : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+               }`}
               >
-                <div className="flex items-center justify-between w-full text-slate-700">
+                <div className="flex items-center justify-between w-full">
                   <Sun size={18} className="text-amber-500" />
                   {theme === 'claro' && <span className="w-2 h-2 bg-[#1a365d] rounded-full" />}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">Tema Claro</p>
+                  <p className={`text-xs font-bold ${theme === 'claro' ? 'text-slate-800' : 'text-slate-700'}`}>Tema Claro</p>
                   <p className="text-[10px] text-gray-400">Diseño institucional limpio</p>
                 </div>
               </button>
 
               {/* Tema Oscuro */}
-              <button
-                type="button"
-                onClick={() => setTheme('oscuro')}
-                className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-24 ${
-                  theme === 'oscuro' ? 'border-blue-500 ring-2 ring-slate-700 bg-slate-900 text-white' : 'border-gray-200 bg-white text-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <Moon size={18} className="text-indigo-400" />
-                  {theme === 'oscuro' && <span className="w-2 h-2 bg-blue-400 rounded-full" />}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white">Tema Oscuro</p>
-                  <p className="text-[10px] text-slate-400">Cyberpunk académico</p>
-                </div>
-              </button>
+            <button
+            type="button"
+            onClick={() => setTheme('oscuro')}
+            className={`p-4 rounded-xl border text-left transition-all duration-300 cursor-pointer flex flex-col justify-between h-24 active:scale-95 ${
+              theme === 'oscuro' 
+                ? 'border-blue-500 ring-2 ring-slate-700 bg-slate-900 text-white' 
+                : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+           }`}
+          >
+            <div className="flex items-center justify-between w-full">
+              <Moon size={18} className="text-indigo-400" />
+              {theme === 'oscuro' && <span className="w-2 h-2 bg-blue-400 rounded-full" />}
+            </div>
+            <div>
+              <p className={`text-xs font-bold ${theme === 'oscuro' ? 'text-white' : 'text-slate-700'}`}>Tema Oscuro</p>
+              <p className={`text-[10px] ${theme === 'oscuro' ? 'text-slate-400' : 'text-gray-400'}`}>Cyberpunk académico</p>
+            </div>
+          </button>
 
               {/* Tema Coquette */}
-              <button
-                type="button"
-                onClick={() => setTheme('coquette')}
-                className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-24 ${
-                  theme === 'coquette' ? 'border-[#f472b6] ring-2 ring-pink-200 bg-[#fff5f6]' : 'border-gray-200 bg-white text-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full text-[#f472b6]">
-                  <Heart size={18} fill={theme === 'coquette' ? '#f472b6' : 'none'} />
-                  {theme === 'coquette' && <span className="w-2 h-2 bg-[#f472b6] rounded-full" />}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[#6d4c51]">Tema Coquette</p>
-                  <p className="text-[10px] text-[#b3888d]">Pink Aesthetic elegante</p>
-                </div>
-              </button>
+          <button
+            type="button"
+            onClick={() => setTheme('coquette')}
+            className={`p-4 rounded-xl border text-left transition-all duration-300 cursor-pointer flex flex-col justify-between h-24 active:scale-95 ${
+              theme === 'coquette' 
+                ? 'border-[#f472b6] ring-2 ring-pink-200 bg-[#fff5f6]' 
+                : 'border-gray-200 bg-white text-slate-600 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center justify-between w-full text-[#f472b6]">
+              <Heart size={18} fill={theme === 'coquette' ? '#f472b6' : 'none'} />
+              {theme === 'coquette' && <span className="w-2 h-2 bg-[#f472b6] rounded-full" />}
             </div>
-          </div>
+            <div>
+              <p className={`text-xs font-bold ${theme === 'coquette' ? 'text-[#6d4c51]' : 'text-slate-700'}`}>Tema Coquette</p>
+              <p className={`text-[10px] ${theme === 'coquette' ? 'text-[#b3888d]' : 'text-gray-400'}`}>Rosado Coquette</p>
+            </div>
+          </button>
+        </div>
+      </div>
 
           {/* PARÁMETROS OPERATIVOS */}
           <div className={`border rounded-2xl p-5 shadow-xs transition-all duration-300 ${c.card}`}>
@@ -151,7 +157,7 @@ export const Configuracion: React.FC = () => {
               <div>
                 <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${c.textLabel}`}>Ciclo Escolar Activo</label>
                 <select value={cicloLectivo} onChange={(e) => setCicloLectivo(e.target.value)} className={`w-full px-3 py-2 border rounded-xl text-xs outline-none cursor-pointer transition-colors ${c.input}`}>
-                  <option value="Primer Semestre 2026">Primer Semestre 2026 (Ciclo Actual)</option>
+                  <option value="Primer Semestre 2026">Primer Semestre 2026</option>
                   <option value="Segundo Semestre 2026">Segundo Semestre 2026</option>
                 </select>
               </div>

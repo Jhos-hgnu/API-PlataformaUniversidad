@@ -3,13 +3,13 @@ import { useAuth } from '../context/useAuth';
 import { getThemeStyles } from '../utils/themeStyles';
 import { LayoutDashboard, Users, GraduationCap, UserPlus, FileText, Settings, LogOut, Search, Bell, User as UserIcon, X, ArrowRight, Info } from 'lucide-react';
 
-interface AdminLayoutProps {
+interface DocenteLayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void; 
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, setActiveTab }) => {
+export const DocenteLayout: React.FC<DocenteLayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { user, logout, theme } = useAuth();
   const styles = getThemeStyles(theme);
 
@@ -58,10 +58,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, s
 
   const menuItems = [
     { id: 'tablero', label: 'Tablero', icon: <LayoutDashboard size={20} /> },
-    { id: 'usuarios', label: 'Gestión de Usuarios', icon: <Users size={20} /> },
-    { id: 'carreras', label: 'Carreras y Cursos', icon: <GraduationCap size={20} /> },
-    { id: 'asignaciones', label: 'Asignaciones', icon: <UserPlus size={20} /> },
-    { id: 'reportes', label: 'Reportes / Auditoría', icon: <FileText size={20} /> },
+    { id: 'cursos', label: 'Mis cursos', icon: <Users size={20} /> },
+    { id: 'actaNotas', label: 'Actas de Notas', icon: <GraduationCap size={20} /> },
+    { id: 'estudiantes', label: 'Estudiantes', icon: <UserPlus size={20} /> },
+    { id: 'mensajes', label: 'Mensajes', icon: <FileText size={20} /> },
     { id: 'config', label: 'Configuración', icon: <Settings size={20} /> },
   ];
 
@@ -107,8 +107,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, s
               <UserIcon size={18} />
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-white text-xs font-bold truncate">{user?.nombre || 'Administrador General'}</p>
-              <p className="text-blue-300 text-[10px] truncate">Admin User</p>
+              <p className="text-white text-xs font-bold truncate">{user?.nombre || 'Docente'}</p>
+              <p className="text-blue-300 text-[10px] truncate">Docente User</p>
             </div>
           </div>
           <button 
@@ -128,7 +128,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, s
         <header className={`h-20 border-b flex items-center justify-between px-8 shrink-0 z-30 ${styles.panel}`}>
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-black uppercase tracking-tight">
-              {menuItems.find(m => m.id === activeTab)?.label || 'Panel Admin'}
+              {menuItems.find(m => m.id === activeTab)?.label || 'Panel Docente'}
             </h1>
             
             {/* BUSCADOR PRINCIPAL */}

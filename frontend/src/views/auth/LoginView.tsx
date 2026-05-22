@@ -32,23 +32,26 @@ export const LoginView: React.FC = () => {
   const { login, user, theme } = useAuth();
   const styles = getThemeStyles(theme);
   const navigate = useNavigate();
+  
+  const [correo, setCorreo] = useState(() => {
+    return localStorage.getItem('remembered_correo') || '';
+  });
+  
+  const [password, setPassword] = useState('');
+  
+  const [rememberMe, setRememberMe] = useState(() => {
+    return !!localStorage.getItem('remembered_correo');
+  });
 
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-<<<<<<< HEAD
-  // CONTROL DE FLUJO ACADÉMICO / REDIRECCIÓN
-  useEffect(() => {
-    if (user?.rol === 'ADMIN') {
-      navigate('/', { replace: true });
-=======
+  // Si el usuario ya está autenticado, mandarlo a su dashboard según rol
   React.useEffect(() => {
-    if (user?.rol === "ADMIN") {
-      navigate("/", { replace: true });
->>>>>>> ba9cf5bd33bee373a3cd091f3b0265c2a80b04a7
+    if (user?.rol === 'ADMIN') {
+      navigate('/admin', { replace: true });
+    } else if (user?.rol === 'DOCENTE') {
+      navigate('/docente', { replace: true });
     }
     // Si tu enrutador principal delega el renderizado directo en la raíz,
     // el estado de autenticación cambiará y mostrará el contenido condicional de abajo.
@@ -88,6 +91,12 @@ export const LoginView: React.FC = () => {
       return;
     }
 
+    if (rememberMe) {
+      localStorage.setItem('remembered_correo', correo);
+    } else {
+      localStorage.removeItem('remembered_correo');
+    }
+
     let mockRol: Role = 'ESTUDIANTE';
     let mockNombre = 'Alex Rivera';
 
@@ -108,9 +117,17 @@ export const LoginView: React.FC = () => {
     };
 
     const mockToken = 'jwt-fake-token-response';
-    
+
     login(mockToken, mockUser);
-    */
+
+    // Redirección post-login según rol
+    setTimeout(() => {
+      if (mockRol === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else if (mockRol === 'DOCENTE') {
+        navigate('/docente', { replace: true });
+      }
+    }, 100);
   };
 
   // =========================================================================
@@ -317,6 +334,9 @@ export const LoginView: React.FC = () => {
               </span>
               <input
                 type="email"
+                name="email"
+                id="email"
+                autoComplete="username"
                 required
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
@@ -336,7 +356,10 @@ export const LoginView: React.FC = () => {
                 <Lock size={15} strokeWidth={2.2} />
               </span>
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                id="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -358,6 +381,7 @@ export const LoginView: React.FC = () => {
             <label className="flex items-center space-x-1.5 text-gray-600 cursor-pointer select-none">
               <input
                 type="checkbox"
+                name="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-3.5 h-3.5 rounded text-[#1a365d] border-gray-300 focus:ring-[#1a365d]/20 transition-all cursor-pointer"

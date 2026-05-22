@@ -1,6 +1,6 @@
-import { useState, type FC, type ReactNode } from "react";
-import { AuthContext } from "./auth.context";
-import type { User, Theme } from "./authTypes";
+import { useState, type FC, type ReactNode } from 'react';
+import { AuthContext } from './auth.context';
+import type { User, Theme } from './authTypes';
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() =>
@@ -12,18 +12,18 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   });
 
   const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
-
-    /*if (savedUser) return JSON.parse(savedUser);
+    const currentToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
     
-    return {
-      id: 1,
-      nombre: 'Administrador General',
-      correo: 'admin@miumg.edu.gt',
-      rol: 'ADMIN'
-    };
-    */
+    if (!currentToken || !savedUser) {
+      return null;
+    }
+    
+    try {
+      return JSON.parse(savedUser);
+    } catch {
+      return null;
+    }
   });
 
   const setTheme = (nuevoTema: Theme) => {
@@ -50,8 +50,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       value={{
         user,
         token,
-        //isAuthenticated: !!token || user?.rol === "ADMIN",
-        isAuthenticated: !!token,
+        isAuthenticated: !!token && !!user,
         theme,
         setTheme,
         login,
