@@ -47,8 +47,6 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
   };
   const t = obtenerEstilosTablero();
 
-  const titleColor = theme === 'oscuro' ? '#f8fafc' : theme === 'coquette' ? '#6d4c51' : '#0f172a';
-
   const kpis = [
     { id: 1, label: 'Alumnos Matriculados', valor: '1,420', icon: <Users size={20} />, color: 'bg-blue-500/10 text-blue-500' },
     { id: 2, label: 'Cursos Activos', valor: '48', icon: <BookOpen size={20} />, color: 'bg-emerald-500/10 text-emerald-500' },
