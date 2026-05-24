@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { EstudiantesService } from './estudiantes.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { Roles } from '../auth/roles.decorator';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import { QueryEstudianteDto } from './dto/query-estudiante.dto';
 
 @Controller('estudiantes')
 export class EstudiantesController {
@@ -23,19 +26,27 @@ export class EstudiantesController {
   }
 
   @Get()
-  @Roles('admin', 'docente')
-  findAll() {
-    return this.estudiantesService.findAll();
+  @Roles('admin', 'docente', 'estudiante')
+  findAll(@Query() query: QueryEstudianteDto) {
+    return this.estudiantesService.findAll(query);
+  }
+
+  @Get('me')
+  @Roles('estudiante')
+  async findMe(
+    @CurrentUser() user: { id: number; correo: string; rol: string },
+  ) {
+    return this.estudiantesService.findByUserId(user.id);
   }
 
   @Get(':id')
-  @Roles('admin', 'docente')
+  @Roles('admin', 'docente', 'estudiante')
   findOne(@Param('id') id: string) {
     return this.estudiantesService.findOne(+id);
   }
 
   @Get('carrera/:idCarrera')
-  @Roles('admin', 'docente')
+  @Roles('admin', 'docente', 'estudiante')
   findByCarrera(@Param('idCarrera') idCarrera: string) {
     return this.estudiantesService.findByCarrera(+idCarrera);
   }
@@ -53,5 +64,11 @@ export class EstudiantesController {
   @Roles('admin')
   remove(@Param('id') id: string) {
     return this.estudiantesService.remove(+id);
+  }
+
+  @Patch(':id/restore')
+  @Roles('admin')
+  restore(@Param('id') id: string) {
+    return this.estudiantesService.restore(+id);
   }
 }

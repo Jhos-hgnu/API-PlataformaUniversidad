@@ -3,6 +3,7 @@ import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 import { UpdateEstudianteDto } from './dto/update-estudiante.dto';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { QueryEstudianteDto } from './dto/query-estudiante.dto';
 
 @Injectable()
 export class EstudiantesService {
@@ -16,6 +17,15 @@ export class EstudiantesService {
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
     if (usuario.rol !== 'estudiante')
       throw new ConflictException('El usuario no tiene rol de estudiante');
+
+    //Control de error
+    const yaRegistrado = await this.prisma.estudiantes.findUnique({
+      where: { id_usuario: createEstudianteDto.id_usuario },
+    });
+    if (yaRegistrado)
+      throw new ConflictException(
+        'Este usuario ya está registrado como estudiante',
+      );
 
     //Verificar que la carrera exista
     const carrera = await this.prisma.carreras.findUnique({
@@ -35,14 +45,21 @@ export class EstudiantesService {
     });
   }
 
-  async findAll() {
-    return this.prisma.estudiantes.findMany({
-      where: { estado: true },
-      include: {
-        Usuarios: { select: { nombre: true, apellido: true, correo: true } },
-        Carreras: { select: { nombre: true } },
-      },
-    });
+  async findAll(query: QueryEstudianteDto = { page: 1, limit: 10 }) {
+    const skip = ((query.page ?? 1) - 1) * (query.limit ?? 10);
+    const [data, total] = await Promise.all([
+      this.prisma.estudiantes.findMany({
+        where: { estado: true },
+        skip,
+        take: query.limit,
+        include: {
+          Usuarios: { select: { nombre: true, apellido: true, correo: true } },
+          Carreras: { select: { nombre: true } },
+        },
+      }),
+      this.prisma.estudiantes.count({ where: { estado: true } }),
+    ]);
+    return { data, total, page: query.page, limit: query.limit };
   }
 
   async findOne(id: number) {
@@ -52,6 +69,15 @@ export class EstudiantesService {
         Usuarios: { select: { nombre: true, apellido: true, correo: true } },
         Carreras: true,
       },
+    });
+    if (!estudiante) throw new NotFoundException('Estudiante no encontrado');
+    return estudiante;
+  }
+
+  async findByUserId(idUsuario: number) {
+    const estudiante = await this.prisma.estudiantes.findUnique({
+      where: { id_usuario: idUsuario },
+      include: { Usuarios: true, Carreras: true },
     });
     if (!estudiante) throw new NotFoundException('Estudiante no encontrado');
     return estudiante;
@@ -96,6 +122,19 @@ export class EstudiantesService {
     return this.prisma.estudiantes.update({
       where: { id_estudiante: id },
       data: { estado: false },
+    });
+  }
+
+  async restore(id: number) {
+    const estudiante = await this.prisma.estudiantes.findUnique({
+      where: { id_estudiante: id },
+    });
+    if (!estudiante) throw new NotFoundException('Estudiante no encontrado');
+    if (estudiante.estado)
+      throw new ConflictException('Estudiante ya está activo');
+    return this.prisma.estudiantes.update({
+      where: { id_estudiante: id },
+      data: { estado: true },
     });
   }
 }
