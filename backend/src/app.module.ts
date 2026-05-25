@@ -11,9 +11,10 @@ import { DocentesModule } from './docentes/docentes.module';
 import { PeriodosModule } from './periodos/periodos.module';
 import { AsignacionesModule } from './asignaciones/asignaciones.module';
 import { InscripcionesModule } from './inscripciones/inscripciones.module';
+import { NotasModule } from './notas/notas.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, PrismaModule, CarrerasModule, CursosModule, EstudiantesModule, DocentesModule, PeriodosModule, AsignacionesModule, InscripcionesModule],
+  imports: [AuthModule, UsersModule, PrismaModule, CarrerasModule, CursosModule, EstudiantesModule, DocentesModule, PeriodosModule, AsignacionesModule, InscripcionesModule, NotasModule],
   controllers: [AppController],
   providers: [AppService],
 })
