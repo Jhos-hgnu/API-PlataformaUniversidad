@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -21,6 +22,11 @@ export class AsignacionesService {
       where: { id_curso: dto.id_curso },
     });
     if (!curso) throw new NotFoundException('Curso no encontrado');
+
+    if (dto.cupo_disponible > curso.cupo_maximo)
+      throw new BadRequestException(
+        `El cupo disponible (${dto.cupo_disponible}) no puede exceder el cupo máximo del curso (${curso.cupo_maximo})`,
+      );
 
     const periodo = await this.prisma.periodos.findUnique({
       where: { id_periodo: dto.id_periodo },
@@ -107,6 +113,24 @@ export class AsignacionesService {
         where: { id_curso: dto.id_curso },
       });
       if (!curso) throw new NotFoundException('Curso no encontrado');
+
+      if (
+        dto.cupo_disponible !== undefined &&
+        dto.cupo_disponible > curso.cupo_maximo
+      )
+        throw new BadRequestException(
+          `El cupo disponible (${dto.cupo_disponible}) no puede exceder el cupo máximo del curso (${curso.cupo_maximo})`,
+        );
+    } else if (dto.cupo_disponible !== undefined) {
+      const asignacion = await this.prisma.asignaciones.findUnique({
+        where: { id_asignacion: id },
+        include: { Cursos: true },
+      });
+      if (!asignacion) throw new NotFoundException('Asignación no encontrada');
+      if (dto.cupo_disponible > asignacion.Cursos.cupo_maximo)
+        throw new BadRequestException(
+          `El cupo disponible (${dto.cupo_disponible}) no puede exceder el cupo máximo del curso (${asignacion.Cursos.cupo_maximo})`,
+        );
     }
 
     if (dto.id_periodo) {
