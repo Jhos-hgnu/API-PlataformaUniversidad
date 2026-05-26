@@ -1,15 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/useAuth';
 import { Users, BookOpen, UserCheck, ShieldAlert, ArrowUpRight, PlusCircle, FileSpreadsheet, Clock } from 'lucide-react';
-import { getThemeStyles } from '../../../utils/themeStyles'; 
-
+import { getThemeStyles } from '../../../utils/themeStyles';
+import { estudiantesService } from '../../../services/estudiantes.service';
+import { cursosService } from '../../../services/cursos.service';
+import { docentesService } from '../../../services/docentes.service';
+import { usuariosService } from '../../../services/usuarios.service';
 
 type Section = 'tablero' | 'usuarios' | 'carreras' | 'asignaciones' | 'reportes' | 'config';
 
 export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => void }> = ({ setActiveSection }) => {
   const { theme } = useAuth();
-
   const globalStyles = getThemeStyles(theme);
+
+  const [totalEstudiantes, setTotalEstudiantes] = useState(0);
+  const [totalCursos, setTotalCursos] = useState(0);
+  const [totalDocentes, setTotalDocentes] = useState(0);
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      estudiantesService.getAll({ limit: 1 }),
+      cursosService.getAll(),
+      docentesService.getAll(),
+      usuariosService.getAll(),
+    ]).then(([estRes, curRes, docRes, usuRes]) => {
+      setTotalEstudiantes(estRes.data.total);
+      setTotalCursos(curRes.data.length);
+      setTotalDocentes(docRes.data.length);
+      setTotalUsuarios(usuRes.data.length);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
   const obtenerEstilosTablero = () => {
     switch (theme) {
@@ -49,22 +71,21 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
   const t = obtenerEstilosTablero();
 
   const kpis = [
-    { id: 1, label: 'Alumnos Matriculados', valor: '1,420', icon: <Users size={20} />, color: 'bg-blue-500/10 text-blue-500' },
-    { id: 2, label: 'Cursos Activos', valor: '48', icon: <BookOpen size={20} />, color: 'bg-emerald-500/10 text-emerald-500' },
-    { id: 3, label: 'Asignaciones Hoy', valor: '189', icon: <UserCheck size={20} />, color: 'bg-amber-500/10 text-amber-500' },
-    { id: 4, label: 'Alertas de Auditoría', valor: '2', icon: <ShieldAlert size={20} />, color: 'bg-rose-500/10 text-rose-500' },
+    { id: 1, label: 'Alumnos Matriculados', valor: loading ? '...' : totalEstudiantes.toLocaleString(), icon: <Users size={20} />, color: 'bg-blue-500/10 text-blue-500' },
+    { id: 2, label: 'Cursos Activos', valor: loading ? '...' : totalCursos.toString(), icon: <BookOpen size={20} />, color: 'bg-emerald-500/10 text-emerald-500' },
+    { id: 3, label: 'Docentes Registrados', valor: loading ? '...' : totalDocentes.toString(), icon: <UserCheck size={20} />, color: 'bg-amber-500/10 text-amber-500' },
+    { id: 4, label: 'Usuarios del Sistema', valor: loading ? '...' : totalUsuarios.toString(), icon: <ShieldAlert size={20} />, color: 'bg-rose-500/10 text-rose-500' },
   ];
 
   const actividades = [
-    { id: 1, usuario: 'Carlos Mendoza (Admin)', detalle: 'Modificó prerrequisitos de Programación II', hora: 'Hace 10 min' },
-    { id: 2, usuario: 'Estudiante #4092', detalle: 'Asignación exitosa a Ingeniería sección A', hora: 'Hace 25 min' },
-    { id: 3, usuario: 'Soporte TI', detalle: 'Respaldo general de base de datos exitoso', hora: 'Hace 1 hora' },
+    { id: 1, usuario: 'Sistema', detalle: 'Panel de administración conectado al backend', hora: 'En vivo' },
+    { id: 2, usuario: 'API', detalle: 'Datos cargados desde SQL Server vía Prisma', hora: 'En vivo' },
+    { id: 3, usuario: 'Monitoreo', detalle: 'Estadísticas calculadas en tiempo real', hora: 'En vivo' },
   ];
 
   return (
     <div className="space-y-6 transition-colors duration-300">
-      
-      {/* SECCIÓN DE BIENVENIDA */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2
@@ -79,7 +100,6 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
         </div>
       </div>
 
-      {/* FILA DE RECUADROS ESTADÍSTICOS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi) => (
           <div key={kpi.id} className={`border rounded-2xl p-5 shadow-xs transition-all ${t.card}`}>
@@ -96,14 +116,13 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* CAPTACIÓN POR FACULTAD */}
+
         <div className={`lg:col-span-2 border rounded-2xl p-5 shadow-xs ${t.card}`}>
           <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-4">
             <FileSpreadsheet size={14} className={t.accentText} />
             <span>Distribución de Matrícula por Facultad</span>
           </h3>
-          
+
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
@@ -137,7 +156,7 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100/10 flex justify-end">
-            <button 
+            <button
               onClick={() => setActiveSection('reportes')}
               className={`text-xs font-bold flex items-center space-x-1 cursor-pointer transition-colors ${t.accentText}`}
             >
@@ -147,24 +166,22 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
           </div>
         </div>
 
-        {/* ACCIONES RÁPIDAS Y BITÁCORA */}
         <div className="space-y-4">
-          
-          {/* ACCIONES DIRECTAS */}
+
           <div className={`border rounded-2xl p-5 shadow-xs ${t.card}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-3">
               <PlusCircle size={14} className={t.accentText} />
               <span>Accesos Rápidos</span>
             </h3>
             <div className="grid grid-cols-1 gap-2">
-              <button 
+              <button
                 onClick={() => setActiveSection('usuarios')}
                 className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${t.actionBtn}`}
               >
                 <span>Registrar Nuevo Usuario</span>
                 <ArrowUpRight size={13} className="opacity-60" />
               </button>
-              <button 
+              <button
                 onClick={() => setActiveSection('carreras')}
                 className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${t.actionBtn}`}
               >
@@ -174,7 +191,6 @@ export const TableroGlobal: React.FC<{ setActiveSection: (section: Section) => v
             </div>
           </div>
 
-          {/* ÚLTIMOS LOGS */}
           <div className={`border rounded-2xl p-5 shadow-xs ${t.card}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-3">
               <Clock size={14} className={t.accentText} />

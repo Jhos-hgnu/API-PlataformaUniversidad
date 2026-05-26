@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/useAuth";
-import type { Role } from "../../context/authTypes";
 import { getThemeStyles } from "../../utils/themeStyles";
 import { AtSign, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../../services/auth.service";
 
 export const LoginView: React.FC = () => {
   const { login, user, theme } = useAuth();
@@ -39,23 +39,13 @@ export const LoginView: React.FC = () => {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo, password }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Credenciales invalidas");
-      }
-
-      const data = await res.json();
-      const usuario = { ...data.usuario, rol: data.usuario.rol.toUpperCase() };
+      const res = await authService.login({ correo, password });
+      const data = res.data;
+      const usuario = { ...data.usuario, rol: data.usuario.rol.toUpperCase() as const };
       login(data.access_token, usuario);
       navigate("/", { replace: true });
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || "Credenciales invalidas");
     }
   };
 
