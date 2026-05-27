@@ -1,27 +1,34 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { useAuth } from './context/useAuth';
-import { LoginView } from './views/auth/LoginView';
-import { AdminDashboard } from './views/usuarios/admin/AdminDashboard';
-import { DocenteDashboard } from './views/usuarios/docente/DocenteDashboard';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
+import { LoginView } from "./views/auth/LoginView";
+import { AdminDashboard } from "./views/usuarios/admin/AdminDashboard";
+import { DocenteDashboard } from "./views/usuarios/docente/DocenteDashboard";
+import { EstudianteDashboardView } from "./views/estudiante/EstudianteDashboardView";
+import "./App.css";
 
 function DashboardSelector() {
   const { user, isAuthenticated } = useAuth();
 
-  // Si no está autenticado, lo manda de regreso a la raíz (el Login)
   if (!isAuthenticated || !user) {
     return <Navigate to="/" replace />;
   }
 
-  // Si es administrador, renderiza el Dashboard del Admin
-  if (user.rol === 'ADMIN') {
+  if (user.rol === "ADMIN") {
     return <AdminDashboard />;
   }
 
-  // Si es docente, renderiza el Dashboard del Docente
-  if (user.rol === 'DOCENTE') {
+  if (user.rol === "DOCENTE") {
     return <DocenteDashboard />;
+  }
+
+  if (user.rol === "ESTUDIANTE") {
+    return <EstudianteDashboardView />;
   }
 
   return <Navigate to="/" replace />;
@@ -40,6 +47,8 @@ export default function App() {
 
           {/* Ruta del dashboard de docentes */}
           <Route path="/docente" element={<DashboardSelector />} />
+
+          <Route path="/estudiante" element={<DashboardSelector />} />
 
           {/* Cualquier otra ruta regresa al Login */}
           <Route path="*" element={<Navigate to="/" replace />} />

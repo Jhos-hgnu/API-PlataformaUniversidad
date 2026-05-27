@@ -1,102 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/useAuth';
 import { getThemeStyles } from '../../../utils/themeStyles';
-import { Users, BookOpen, UserCheck, Search, Edit2, UserMinus, CheckCircle,Plus,Trash2,X } from 'lucide-react';
+import { Users, BookOpen, UserCheck, Search, Edit2, UserMinus, CheckCircle, Plus, Trash2, X } from 'lucide-react';
+import { usuariosService, type Usuario } from '../../../services/usuarios.service';
 
-interface Usuario {
-  id: string;
+interface UsuarioUI {
+  id: number;
   nombre: string;
+  apellido: string;
   correo: string;
   rol: 'Admin' | 'Docente' | 'Estudiante';
   estado: 'Activo' | 'Inactivo';
   fechaRegistro: string;
 }
 
+const mapBackendToUI = (u: Usuario): UsuarioUI => ({
+  id: u.id_usuario,
+  nombre: `${u.nombre} ${u.apellido}`,
+  apellido: u.apellido,
+  correo: u.correo,
+  rol: u.rol === 'admin' ? 'Admin' : u.rol === 'docente' ? 'Docente' : 'Estudiante',
+  estado: u.estado ? 'Activo' : 'Inactivo',
+  fechaRegistro: new Date(u.fecha_creacion).toLocaleDateString('es-GT'),
+});
+
+const mapRolToBackend = (rol: string): 'admin' | 'docente' | 'estudiante' => {
+  switch (rol) {
+    case 'Admin': return 'admin';
+    case 'Docente': return 'docente';
+    default: return 'estudiante';
+  }
+};
+
 export const GestionUsuarios: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'Todos' | 'Admin' | 'Docente' | 'Estudiante'>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const { theme } = useAuth();
   const styles = getThemeStyles(theme);
-  
-  // Estados para controlar los Modales
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null);
 
-  // Estados del Formulario
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUsuario, setEditingUsuario] = useState<UsuarioUI | null>(null);
+
   const [formNombre, setFormNombre] = useState('');
+  const [formApellido, setFormApellido] = useState('');
   const [formCorreo, setFormCorreo] = useState('');
+  const [formPassword, setFormPassword] = useState('');
   const [formRol, setFormRol] = useState<'Admin' | 'Docente' | 'Estudiante'>('Estudiante');
 
-  // Datos mock iniciales
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
-    { id: '1', nombre: 'Cindy Ruano', correo: 'cruano@miumg.edu.gt', rol: 'Admin', estado: 'Inactivo', fechaRegistro: '10/02/2026' },
-    { id: '2', nombre: 'Josué Hicho', correo: 'jhicho@miumg.edu.gt', rol: 'Docente', estado: 'Inactivo', fechaRegistro: '15/01/2026' },
-    { id: '3', nombre: 'Madelin Cerón', correo: 'mceron@miumg.edu.gt', rol: 'Estudiante', estado: 'Inactivo', fechaRegistro: '02/02/2026' },
-    { id: '4', nombre: 'Yamilet Lindo', correo: 'ylindo@miumg.edu.gt', rol: 'Docente', estado: 'Inactivo', fechaRegistro: '20/11/2025' },
-    { id: '5', nombre: 'María Lopéz', correo: 'mlopez@miumg.edu.gt', rol: 'Estudiante', estado: 'Activo', fechaRegistro: '18/02/2026' },
-    { id: '6', nombre: 'Dulce Prado', correo: 'dprado@miumg.edu.gt', rol: 'Estudiante', estado: 'Activo', fechaRegistro: '18/02/2026' },
+  const [usuarios, setUsuarios] = useState<UsuarioUI[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  ]);
+  const cargarUsuarios = useCallback(() => {
+    setLoading(true);
+    usuariosService.getAll()
+      .then(res => setUsuarios(res.data.map(mapBackendToUI)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  // Cambiar de Activo a Inactivo
-  const toggleEstado = (id: string) => {
-    setUsuarios(usuarios.map(u => u.id === id ? { ...u, estado: u.estado === 'Activo' ? 'Inactivo' : 'Activo' } : u));
+  useEffect(() => { cargarUsuarios(); }, [cargarUsuarios]);
+
+  const toggleEstado = (id: number) => {
+    const usuario = usuarios.find(u => u.id === id);
+    if (!usuario) return;
+    const nuevoEstado = usuario.estado === 'Activo' ? 'Inactivo' : 'Activo';
+    usuariosService.update(id, { ...(nuevoEstado === 'Activo' ? { estado: true } : { estado: false }) })
+      .then(() => cargarUsuarios())
+      .catch(() => {});
   };
 
-  // Eliminar un usuario permanentemente
-  const eliminarUsuario = (id: string) => {
+  const eliminarUsuario = (id: number) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar permanentemente este usuario?')) {
-      setUsuarios(usuarios.filter(u => u.id !== id));
+      usuariosService.remove(id)
+        .then(() => cargarUsuarios())
+        .catch(() => {});
     }
   };
 
-  // Abrir modal para crear nuevo
   const handleNuevoUsuarioClick = () => {
     setEditingUsuario(null);
     setFormNombre('');
+    setFormApellido('');
     setFormCorreo('');
+    setFormPassword('');
     setFormRol('Estudiante');
     setIsModalOpen(true);
   };
 
-  // Abrir modal para editar existente (Lápiz)
-  const handleEditarClick = (usuario: Usuario) => {
+  const handleEditarClick = (usuario: UsuarioUI) => {
     setEditingUsuario(usuario);
-    setFormNombre(usuario.nombre);
+    const partes = usuario.nombre.split(' ');
+    setFormNombre(partes[0] || '');
+    setFormApellido(partes.slice(1).join(' ') || '');
     setFormCorreo(usuario.correo);
+    setFormPassword('');
     setFormRol(usuario.rol);
     setIsModalOpen(true);
   };
 
-  // Guardar datos
-  const handleGuardarSubmit = (e: React.FormEvent) => {
+  const handleGuardarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (editingUsuario) {
-      // Modo Edición
-      setUsuarios(usuarios.map(u => u.id === editingUsuario.id ? {
-        ...u,
-        nombre: formNombre,
-        correo: formCorreo,
-        rol: formRol
-      } : u));
-    } else {
-      // Modo Creación
-      const hoy = new Date();
-      const fechaActual = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
-      
-      const nuevo: Usuario = {
-        id: Date.now().toString(),
-        nombre: formNombre,
-        correo: formCorreo,
-        rol: formRol,
-        estado: 'Activo',
-        fechaRegistro: fechaActual
-      };
-      setUsuarios([...usuarios, nuevo]);
-    }
-
-    setIsModalOpen(false);
+    try {
+      if (editingUsuario) {
+        await usuariosService.update(editingUsuario.id, {
+          nombre: formNombre,
+          apellido: formApellido,
+          correo: formCorreo,
+          rol: mapRolToBackend(formRol),
+          ...(formPassword ? { password: formPassword } : {}),
+        });
+      } else {
+        await usuariosService.create({
+          nombre: formNombre,
+          apellido: formApellido,
+          correo: formCorreo,
+          password: formPassword,
+          rol: mapRolToBackend(formRol),
+        });
+      }
+      cargarUsuarios();
+      setIsModalOpen(false);
+    } catch {}
   };
 
   const usuariosFiltrados = usuarios.filter(u => {
@@ -107,50 +132,43 @@ export const GestionUsuarios: React.FC = () => {
 
   return (
     <div className={`space-y-6 transition-all duration-300 ${styles.page}`}>
-      {/* TARJETAS DE MÉTRICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Total */}
         <div className={`p-4 rounded-2xl border ${styles.border} ${styles.panel} ${styles.shadow} flex items-center space-x-4`}>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users size={20} /></div>
           <div>
             <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">Total</p>
-            <h4 className="text-xl font-bold text-slate-800">{usuarios.length}</h4>
+            <h4 className="text-xl font-bold text-slate-800">{loading ? '...' : usuarios.length}</h4>
           </div>
         </div>
 
-        {/* Estudiantes */}
         <div className={`p-4 rounded-2xl border ${styles.border} ${styles.panel} ${styles.shadow} flex items-center space-x-4`}>
           <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><Users size={20} /></div>
           <div>
             <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">Estudiantes</p>
-            <h4 className="text-xl font-bold text-slate-800">{usuarios.filter(u => u.rol === 'Estudiante').length}</h4>
+            <h4 className="text-xl font-bold text-slate-800">{loading ? '...' : usuarios.filter(u => u.rol === 'Estudiante').length}</h4>
           </div>
         </div>
 
-        {/* Docentes */}
         <div className={`p-4 rounded-2xl border ${styles.border} ${styles.panel} ${styles.shadow} flex items-center space-x-4`}>
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><BookOpen size={20} /></div>
           <div>
             <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">Docentes</p>
-            <h4 className="text-xl font-bold text-slate-800">{usuarios.filter(u => u.rol === 'Docente').length}</h4>
+            <h4 className="text-xl font-bold text-slate-800">{loading ? '...' : usuarios.filter(u => u.rol === 'Docente').length}</h4>
           </div>
         </div>
 
-        {/* Activos */}
         <div className={`p-4 rounded-2xl border ${styles.border} ${styles.panel} ${styles.shadow} flex items-center space-x-4`}>
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><UserCheck size={20} /></div>
           <div>
             <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">Activos</p>
-            <h4 className="text-xl font-bold text-slate-800">{usuarios.filter(u => u.estado === 'Activo').length}</h4>
+            <h4 className="text-xl font-bold text-slate-800">{loading ? '...' : usuarios.filter(u => u.estado === 'Activo').length}</h4>
           </div>
         </div>
       </div>
 
-      {/* CONTENEDOR DE FILTROS Y TABLA */}
       <div className={`rounded-2xl border ${styles.border} shadow ${styles.shadow} overflow-hidden ${styles.panel}`}>
         <div className={`p-5 border-b ${styles.border} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${styles.panelMuted}`}>
-          
-          {/* Pestañas de control */}
+
           <div className={`flex p-1 rounded-xl space-x-1 ${styles.panelMuted}`}>
             {(['Todos', 'Admin', 'Docente', 'Estudiante'] as const).map((tab) => (
               <button
@@ -165,11 +183,10 @@ export const GestionUsuarios: React.FC = () => {
             ))}
           </div>
 
-          {/* Buscador interno local y botón agregar */}
           <div className="flex items-center space-x-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-              <input 
+              <input
                 type="text"
                 placeholder="Filtrar por nombre o correo..."
                 value={searchQuery}
@@ -177,7 +194,7 @@ export const GestionUsuarios: React.FC = () => {
                 className={`pl-9 pr-4 py-2 rounded-xl text-xs w-full sm:w-72 focus:outline-none transition-all ${styles.input} ${styles.border}`}
               />
             </div>
-            <button 
+            <button
               onClick={handleNuevoUsuarioClick}
               className={`flex items-center space-x-1.5 px-4 py-2 text-white text-xs font-bold rounded-xl transition-all shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
             >
@@ -187,7 +204,6 @@ export const GestionUsuarios: React.FC = () => {
           </div>
         </div>
 
-        {/* TABLA PRINCIPAL */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -200,7 +216,9 @@ export const GestionUsuarios: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
-              {usuariosFiltrados.length > 0 ? (
+              {loading ? (
+                <tr><td colSpan={5} className="py-8 text-center text-gray-400 font-medium">Cargando usuarios...</td></tr>
+              ) : usuariosFiltrados.length > 0 ? (
                 usuariosFiltrados.map((u) => (
                   <tr key={u.id} className={`transition-colors ${styles.tableRowHover}`}>
                     <td className="py-4 px-6">
@@ -228,30 +246,25 @@ export const GestionUsuarios: React.FC = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center space-x-1">
-                        {/* BOTÓN EDITAR */}
-                        <button 
+                        <button
                           onClick={() => handleEditarClick(u)}
-                          title="Editar Usuario" 
+                          title="Editar Usuario"
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                         >
                           <Edit2 size={13} />
                         </button>
-                        
-                        {/* BOTÓN TOGGLE ESTADO */}
-                        <button 
+                        <button
                           onClick={() => toggleEstado(u.id)}
-                          title={u.estado === 'Activo' ? "Desactivar" : "Activar"} 
+                          title={u.estado === 'Activo' ? "Desactivar" : "Activar"}
                           className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                             u.estado === 'Activo' ? 'text-gray-400 hover:text-rose-600 hover:bg-rose-50' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
                           }`}
                         >
                           {u.estado === 'Activo' ? <UserMinus size={13} /> : <CheckCircle size={13} />}
                         </button>
-
-                        {/* BOTÓN ELIMINAR */}
-                        <button 
+                        <button
                           onClick={() => eliminarUsuario(u.id)}
-                          title="Eliminar permanentemente" 
+                          title="Eliminar permanentemente"
                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         >
                           <Trash2 size={13} />
@@ -272,17 +285,15 @@ export const GestionUsuarios: React.FC = () => {
         </div>
       </div>
 
-      {/* NUEVO / EDITAR USUARIO */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs">
           <div className={`rounded-2xl w-full max-w-md p-6 shadow-2xl border ${styles.border} ${styles.panel} animate-in fade-in zoom-in-95 duration-150`}>
-            
-            {/* Cabecera del Modal */}
+
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-base font-bold text-slate-800">
                 {editingUsuario ? 'Modificar Usuario Académico' : 'Registrar Nuevo Usuario'}
               </h3>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
@@ -291,27 +302,33 @@ export const GestionUsuarios: React.FC = () => {
               </button>
             </div>
 
-            {/* Formulario Interno */}
             <form onSubmit={handleGuardarSubmit} className="mt-4 space-y-4 text-left">
-              
-              <div>
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nombre Completo</label>
-                <input 
-                  type="text" 
-                  required
-                  value={formNombre}
-                  onChange={(e) => setFormNombre(e.target.value)}
-                  placeholder="Ej. Ing. René Paiz"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-slate-400 text-gray-700"
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nombre</label>
+                  <input
+                    type="text" required value={formNombre}
+                    onChange={(e) => setFormNombre(e.target.value)}
+                    placeholder="Ej. René"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-slate-400 text-gray-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Apellido</label>
+                  <input
+                    type="text" required value={formApellido}
+                    onChange={(e) => setFormApellido(e.target.value)}
+                    placeholder="Ej. Paiz"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-slate-400 text-gray-700"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Correo Electrónico Institucional</label>
-                <input 
-                  type="email" 
-                  required
-                  value={formCorreo}
+                <input
+                  type="email" required value={formCorreo}
                   onChange={(e) => setFormCorreo(e.target.value)}
                   placeholder="ejemplo@miumg.edu.gt"
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-slate-400 text-gray-700"
@@ -319,8 +336,19 @@ export const GestionUsuarios: React.FC = () => {
               </div>
 
               <div>
+                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">{editingUsuario ? 'Nueva Contraseña (dejar vacío para mantener)' : 'Contraseña'}</label>
+                <input
+                  type="password" required={!editingUsuario} value={formPassword}
+                  onChange={(e) => setFormPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  minLength={6}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-slate-400 text-gray-700"
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Rol del Sistema</label>
-                <select 
+                <select
                   value={formRol}
                   onChange={(e) => setFormRol(e.target.value as 'Admin' | 'Docente' | 'Estudiante')}
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white outline-none focus:border-slate-400 text-gray-700 cursor-pointer"
@@ -331,17 +359,16 @@ export const GestionUsuarios: React.FC = () => {
                 </select>
               </div>
 
-              {/* Botoneras */}
               <div className="pt-2 flex justify-end space-x-2">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border border-gray-200 text-gray-500 font-bold text-xs rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className={`px-4 py-2 text-white font-bold text-xs rounded-xl transition-all shadow ${styles.shadow} cursor-pointer ${styles.buttonPrimary}`}
                 >
                   {editingUsuario ? 'Guardar Cambios' : 'Registrar Cuenta'}
@@ -349,7 +376,6 @@ export const GestionUsuarios: React.FC = () => {
               </div>
 
             </form>
-
           </div>
         </div>
       )}
