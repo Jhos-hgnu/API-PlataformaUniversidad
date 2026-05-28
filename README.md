@@ -1,6 +1,59 @@
 # API-Universidad
 
+**ESTADO:** ✅ Frontend Funcional - Login y Dashboards Operacionales
+
 Proyecto académico desarrollado para el curso de **Base de Datos 2**, enfocado en la construcción de una plataforma universitaria con arquitectura distribuida, respaldos automatizados y simulación de alta disponibilidad.
+
+---
+
+## 🚀 ESTADO ACTUAL DEL PROYECTO
+
+### ✅ Frontend COMPLETAMENTE FUNCIONAL
+
+**Corregido y Operacional:**
+- ✅ Login funcional con validación de email institucional
+- ✅ Dashboard Admin con 6 módulos navegables
+- ✅ Dashboard Docente con 6 módulos navegables  
+- ✅ Sistema de temas (Claro, Oscuro, Coquette)
+- ✅ Configuración personal para docentes
+- ✅ Logout y redirección correcta
+- ✅ Responsive design en todos los dispositivos
+
+**Correcciones Realizadas:**
+1. Renombrada exportación `Notas` → `ControlNotas`
+2. Implementado componente `ConfiguracionDoc` vacío
+3. Unificada navegación post-logout
+4. Sincronizados tipos TypeScript entre componentes
+
+📖 Ver detalles: [`CAMBIOS_REALIZADOS.md`](./CAMBIOS_REALIZADOS.md)
+
+---
+
+## 📋 GUÍA RÁPIDA DE USO
+
+### Instalación y Ejecución
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Acceder en: `http://localhost:5173`
+
+### Credenciales de Prueba
+
+| Rol | Email | Acceso |
+|-----|-------|--------|
+| Admin | `admin@miumg.edu.gt` | Dashboard Admin |
+| Docente | `docente@miumg.edu.gt` | Dashboard Docente |
+| Estudiante | `estudiante@miumg.edu.gt` | Login solo (no implementado) |
+
+✅ La contraseña puede ser cualquier valor en modo mock.
+
+📖 Ver detalles: [`INSTRUCCIONES_EJECUCION.md`](./INSTRUCCIONES_EJECUCION.md)
+
+---
 
 ## Objetivo del Proyecto
 

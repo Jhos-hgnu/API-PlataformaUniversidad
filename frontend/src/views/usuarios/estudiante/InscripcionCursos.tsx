@@ -31,6 +31,7 @@ const mapToUI = (a: Asignacion): CursoOfertado => ({
 export const InscripcionCursos: React.FC = () => {
   const { theme, user } = useAuth();
   const styles = getThemeStyles(theme);
+  const isDark = theme === 'oscuro';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [seccionFilter, setSeccionFilter] = useState<string>('TODAS');
@@ -156,13 +157,18 @@ export const InscripcionCursos: React.FC = () => {
         <div className={`p-5 border-b ${styles.border} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${styles.panelMuted}`}>
           <div className="flex flex-col sm:flex-row gap-2 flex-1 max-w-2xl">
             <div className="relative flex-1">
+<<<<<<< Updated upstream
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input
+=======
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+              <input 
+>>>>>>> Stashed changes
                 type="text"
                 placeholder="Buscar materias por nombre, código o catedrático..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-9 pr-4 py-2 rounded-xl text-xs w-full focus:outline-none transition-all ${styles.input} ${styles.border}`}
+                className={`w-full pl-10 pr-4 py-2 border rounded-xl text-xs outline-none transition-all ${isDark ? 'bg-slate-900 border-transparent text-slate-200 focus:border-slate-700' : 'bg-gray-50 border-transparent focus:bg-white focus:border-gray-300'}`}
               />
             </div>
 
