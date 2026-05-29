@@ -1,183 +1,327 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/useAuth';
-import {
-  LayoutDashboard,
-  BookOpen,
-  FolderOpen,
-  FileText,
-  MessageSquare,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
-  GraduationCap,
-  User as UserIcon,
-  Sun,
-  Moon,
-  Heart,
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutDashboard, BookOpen, FileSpreadsheet, FileText, MessageSquare, Settings, LogOut, Search, Bell, ShieldCheck, X, ArrowRight, Info, GraduationCap } from 'lucide-react';
+import estudianteImg from '../assets/imagenes/estudiante.webp';
 
-export type TabEstudiante = 'tablero' | 'inscripciones' | 'cursos' | 'expediente' | 'mensajes' | 'config';
+export type TabEstudiante = 'tablero' | 'cursos' | 'notas' | 'expediente' | 'mensajes' | 'config';
 
 interface EstudianteLayoutProps {
   children: React.ReactNode;
   activeTab: TabEstudiante;
-  onTabChange: (tab: TabEstudiante) => void;
+  setActiveTab: (tab: TabEstudiante) => void;
 }
 
-export const EstudianteLayout: React.FC<EstudianteLayoutProps> = ({ children, activeTab, onTabChange }) => {
-  const { user, logout, theme, setTheme } = useAuth();
+export const EstudianteLayout: React.FC<EstudianteLayoutProps> = ({ children, activeTab, setActiveTab }) => {
+  const { user, logout, theme } = useAuth();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    { id: 'tablero' as TabEstudiante, label: 'Tablero (Inicio)', icon: <LayoutDashboard size={20} /> },
-    { id: 'inscripciones' as TabEstudiante, label: 'Inscripciones', icon: <BookOpen size={20} /> },
-    { id: 'cursos' as TabEstudiante, label: 'Cursos', icon: <FolderOpen size={20} /> },
-    { id: 'expediente' as TabEstudiante, label: 'Expediente', icon: <FileText size={20} /> },
-    { id: 'mensajes' as TabEstudiante, label: 'Mensajes / Avisos', icon: <MessageSquare size={20} /> },
-    { id: 'config' as TabEstudiante, label: 'Configuración', icon: <Settings size={20} /> },
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const searchRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  const [notifications] = useState([
+    { id: 1, title: 'Inscripciones Abiertas', desc: 'El período de inscripción para el segundo semestre 2026 está activo.', time: 'Hace 5 min', unread: true },
+    { id: 2, title: 'Notas Publicadas', desc: 'Tus notas del primer ciclo ya están disponibles en el módulo de notas.', time: 'Hace 2 horas', unread: true },
+    { id: 3, title: 'Mantenimiento Programado', desc: 'El portal estudiantil tendrá un reinicio a las 22:00 hrs.', time: 'Hace 1 día', unread: false },
+  ]);
+
+  const searchIndex: { keys: string[]; section: TabEstudiante; label: string }[] = [
+    { keys: ['tablero', 'inicio', 'dashboard', 'resumen', 'general'], section: 'tablero', label: 'Ir al Tablero Principal' },
+    { keys: ['cursos', 'inscripciones', 'materias', 'asignaturas', 'inscribirse'], section: 'cursos', label: 'Ir a Inscripción de Cursos' },
+    { keys: ['notas', 'calificaciones', 'promedio', 'nota final'], section: 'notas', label: 'Ir a Mis Notas' },
+    { keys: ['expediente', 'record', 'kardex', 'historial'], section: 'expediente', label: 'Ir a Expediente Académico' },
+    { keys: ['mensajes', 'chat', 'bandeja', 'avisos', 'correo'], section: 'mensajes', label: 'Ir a Mensajes y Avisos' },
+    { keys: ['configuracion', 'ajustes', 'tema', 'claro', 'oscuro', 'perfil'], section: 'config', label: 'Ir a Configuración' },
   ];
 
-  const getStyles = () => {
+  const searchResults = searchQuery.trim() === '' ? [] : searchIndex.filter(item =>
+    item.keys.some(key => key.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchQuery('');
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const menuItems: { id: TabEstudiante; label: string; icon: React.ReactNode }[] = [
+    { id: 'tablero', label: 'Tablero', icon: <LayoutDashboard size={18} /> },
+    { id: 'cursos', label: 'Inscripción Cursos', icon: <BookOpen size={18} /> },
+    { id: 'notas', label: 'Mis Notas', icon: <FileSpreadsheet size={18} /> },
+    { id: 'expediente', label: 'Expediente', icon: <FileText size={18} /> },
+    { id: 'mensajes', label: 'Mensajes', icon: <MessageSquare size={18} /> },
+    { id: 'config', label: 'Configuración', icon: <Settings size={18} /> },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
+
+  const obtenerEstilosGlobales = () => {
     switch (theme) {
       case 'oscuro':
         return {
           wrapper: 'bg-slate-900',
           sidebar: 'bg-slate-950 border-r border-slate-800',
-          sidebarItem: 'text-slate-400 hover:bg-slate-900 hover:text-slate-200',
-          sidebarItemActive: 'bg-blue-600 text-white shadow-lg',
-          sidebarIcon: 'text-blue-300',
+          sidebarHeader: 'border-slate-800',
+          sidebarActiveTab: 'bg-blue-600 text-white shadow-lg shadow-blue-900/30',
+          sidebarInactiveTab: 'text-slate-400 hover:bg-slate-900 hover:text-slate-200',
           sidebarIconActive: 'text-white',
-          header: 'bg-slate-950 border-b border-slate-800',
-          headerTitle: 'text-slate-200',
-          searchInput: 'bg-slate-800 text-slate-200 placeholder:text-slate-500',
-          sectionBg: 'bg-slate-900/40',
-          logo: 'text-white',
-          logoSub: 'text-blue-300',
-          userName: 'text-white',
-          userRole: 'text-blue-300',
+          sidebarIconInactive: 'text-slate-500',
+          mainContent: 'bg-slate-900',
+          header: 'bg-slate-950 border-b border-slate-800 text-white',
+          headerTitle: 'text-slate-100',
+          searchInput: 'bg-slate-800 border-transparent text-slate-200 focus:bg-slate-800/80 focus:border-slate-700 placeholder:text-slate-500',
+          notificationBtn: 'text-slate-400 hover:bg-slate-900',
+          shieldBox: 'bg-blue-950 text-blue-400 border border-blue-900',
+          bodySection: 'bg-slate-900/40 text-slate-100',
+          dropdownPanel: 'bg-slate-900 border-slate-800 text-white shadow-black/40',
+          dropdownItemHover: 'hover:bg-slate-800 text-slate-200'
         };
+
       case 'coquette':
         return {
           wrapper: 'bg-[#fff5f6]',
           sidebar: 'bg-[#4c282c] border-r border-[#fbcdd4]/20',
-          sidebarItem: 'text-[#fbcdd4]/80 hover:bg-[#5c3439] hover:text-white',
-          sidebarItemActive: 'bg-[#f472b6] text-white shadow-md',
-          sidebarIcon: 'text-[#fbcdd4]/50',
+          sidebarHeader: 'border-white/10',
+          sidebarActiveTab: 'bg-[#f472b6] text-white shadow-md shadow-pink-950/20',
+          sidebarInactiveTab: 'text-[#fbcdd4]/80 hover:bg-[#5c3439] hover:text-white',
           sidebarIconActive: 'text-white',
-          header: 'bg-white border-b border-[#fbcdd4]',
-          headerTitle: 'text-[#6d4c51]',
-          searchInput: 'bg-[#fffafb] border-[#fbcdd4] text-[#6d4c51] placeholder:text-[#b3888d]/60',
-          sectionBg: 'bg-[#fff5f6]',
-          logo: 'text-white',
-          logoSub: 'text-[#fbcdd4]',
-          userName: 'text-white',
-          userRole: 'text-[#fbcdd4]',
+          sidebarIconInactive: 'text-[#fbcdd4]/50',
+          mainContent: 'bg-[#fff5f6]',
+          header: 'bg-white border-b border-[#fbcdd4] text-[#6d4c51]',
+          headerTitle: 'text-[#6d4c51] font-bold',
+          searchInput: 'bg-[#fffafb] border-[#fbcdd4] text-[#6d4c51] focus:bg-white focus:border-[#f472b6] placeholder:text-[#b3888d]/60',
+          notificationBtn: 'text-[#6d4c51] hover:bg-[#fff5f6]',
+          shieldBox: 'bg-[#f472b6] text-white shadow-xs',
+          bodySection: 'bg-[#fff5f6] text-[#6d4c51]',
+          dropdownPanel: 'bg-white border-[#fbcdd4] text-[#6d4c51] shadow-pink-100/50',
+          dropdownItemHover: 'hover:bg-[#fff5f6] text-[#6d4c51]'
         };
+
       case 'claro':
       default:
         return {
           wrapper: 'bg-[#f4f6f9]',
           sidebar: 'bg-[#1a365d]',
-          sidebarItem: 'text-blue-100 hover:bg-white/10',
-          sidebarItemActive: 'bg-white text-[#1a365d] shadow-lg',
-          sidebarIcon: 'text-blue-300',
+          sidebarHeader: 'border-white/10',
+          sidebarActiveTab: 'bg-white text-[#1a365d] shadow-md',
+          sidebarInactiveTab: 'text-blue-100 hover:bg-white/5',
           sidebarIconActive: 'text-[#1a365d]',
-          header: 'bg-white border-b border-gray-100',
-          headerTitle: 'text-gray-800',
-          searchInput: 'bg-gray-50 text-gray-700 placeholder:text-gray-400',
-          sectionBg: 'bg-[#f8fafc]',
-          logo: 'text-white',
-          logoSub: 'text-blue-200',
-          userName: 'text-white',
-          userRole: 'text-blue-200',
+          sidebarIconInactive: 'text-blue-300',
+          mainContent: 'flex-1 flex flex-col overflow-hidden h-full',
+          header: 'bg-white border-b border-gray-100 text-slate-700',
+          headerTitle: 'text-slate-800',
+          searchInput: 'bg-[#f1f5f9] border border-transparent text-gray-700 focus:bg-white focus:border-gray-300 placeholder:text-gray-400',
+          notificationBtn: 'text-gray-500 hover:bg-gray-100',
+          shieldBox: 'bg-[#0f172a] text-white shadow-md',
+          bodySection: 'bg-[#f8fafc] text-slate-800',
+          dropdownPanel: 'bg-white border-gray-200 text-slate-800 shadow-xl shadow-gray-100',
+          dropdownItemHover: 'hover:bg-gray-50 text-slate-700'
         };
     }
   };
 
-  const s = getStyles();
+  const g = obtenerEstilosGlobales();
 
-  const themeIcon = theme === 'oscuro' ? <Moon size={16} /> : theme === 'coquette' ? <Heart size={16} /> : <Sun size={16} />;
-  const nextTheme: Record<string, 'claro' | 'oscuro' | 'coquette'> = { claro: 'oscuro', oscuro: 'coquette', coquette: 'claro' };
+  const headerTitleMap: Record<TabEstudiante, string> = {
+    tablero: 'Panel Estudiante',
+    cursos: 'Inscripción de Cursos',
+    notas: 'Mis Notas',
+    expediente: 'Expediente Académico',
+    mensajes: 'Mensajes y Avisos',
+    config: 'Configuración de Cuenta',
+  };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden ${s.wrapper}`}>
-      <aside className={`w-64 flex flex-col shrink-0 h-full shadow-xl ${s.sidebar}`}>
-        <div className="p-5 flex flex-col items-center border-b shrink-0 border-white/10">
+    <div className={`fixed inset-0 h-screen w-screen flex overflow-hidden m-0 p-0 font-sans antialiased transition-colors duration-300 ${g.wrapper}`}>
+
+      <aside className={`w-64 flex flex-col shrink-0 h-full transition-all duration-300 shadow-xl ${g.sidebar}`}>
+        <div className={`p-5 flex flex-col items-center border-b shrink-0 transition-colors ${g.sidebarHeader}`}>
           <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-2">
             <GraduationCap className="text-white" size={22} />
           </div>
-          <h2 className={`font-black text-lg tracking-tight uppercase ${s.logo}`}>UniDB</h2>
-          <p className={`${s.logoSub} text-[9px] uppercase tracking-widest font-bold mt-0.5`}>Portal Estudiante</p>
+          <h2 className="font-black text-lg tracking-tight uppercase text-white">Universidad UMG</h2>
+          <p className={`${theme === 'coquette' ? 'text-pink-200' : 'text-blue-200'} text-[9px] uppercase tracking-widest font-bold mt-0.5`}>
+            Portal Estudiante
+          </p>
         </div>
 
         <nav className="flex-1 px-3 space-y-1.5 mt-4 overflow-y-auto">
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-left cursor-pointer ${
-                activeTab === item.id ? s.sidebarItemActive : s.sidebarItem
+              onClick={() => {
+                setActiveTab(item.id);
+                setSearchQuery('');
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer ${
+                activeTab === item.id ? g.sidebarActiveTab : g.sidebarInactiveTab
               }`}
             >
-              <span className={activeTab === item.id ? s.sidebarIconActive : s.sidebarIcon}>{item.icon}</span>
-              <span className="font-semibold text-xs tracking-wide">{item.label}</span>
+              <span className={`transition-colors ${activeTab === item.id ? g.sidebarIconActive : g.sidebarIconInactive}`}>
+                {item.icon}
+              </span>
+              <span className="font-normal text-xs tracking-wide">{item.label}</span>
             </button>
           ))}
         </nav>
 
         <div className="p-4 shrink-0 flex flex-col">
           <button
-            onClick={() => setTheme(nextTheme[theme])}
-            className={`w-full flex items-center justify-center space-x-2 py-2 rounded-xl transition-colors text-xs font-bold cursor-pointer mb-2 ${s.sidebarItem}`}
-          >
-            {themeIcon}
-            <span>Tema: {theme === 'claro' ? 'Claro' : theme === 'oscuro' ? 'Oscuro' : 'Coquette'}</span>
-          </button>
-          <button
-            onClick={logout}
+            onClick={handleLogout}
             className="w-full flex items-center justify-center space-x-2 text-red-300 hover:text-red-100 bg-red-500/10 hover:bg-red-500/20 py-2.5 rounded-xl transition-colors text-xs font-bold cursor-pointer"
           >
             <LogOut size={14} />
             <span>Cerrar Sesión</span>
           </button>
           <div className="w-full h-px bg-white/10 my-4" />
-          <div className="flex items-center space-x-3 p-1.5">
-            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
-              {user?.nombre?.charAt(0) || 'A'}
+          <div className="flex items-center space-x-3 p-1.5 rounded-xl bg-transparent">
+            <div className="w-9 h-9 shrink-0 rounded-full overflow-hidden border border-white/20 shadow-md">
+              <img
+                src={estudianteImg}
+                alt="Estudiante Profile"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
+                }}
+              />
             </div>
             <div className="flex flex-col text-left overflow-hidden">
-              <p className={`text-xs font-black truncate ${s.userName}`}>{user?.nombre || 'Estudiante'}</p>
-              <p className={`${s.userRole} text-[10px] truncate`}>Estudiante</p>
+              <p className="text-xs font-black truncate leading-tight text-white">
+                {user?.nombre || 'Estudiante UMG'}
+              </p>
+              <p className={`${theme === 'coquette' ? 'text-pink-300' : 'text-blue-300'} text-[10px] font-medium truncate mt-0.5`}>
+                Estudiante
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col overflow-hidden h-full">
-        <header className={`h-16 flex items-center justify-between px-8 shrink-0 z-10 transition-all duration-300 ${s.header}`}>
-          <span className={`text-xl font-black tracking-tight ${s.headerTitle}`}>
-            {activeTab === 'tablero' ? 'Tablero' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-          </span>
+
+        <header className={`h-16 flex items-center justify-between px-8 shrink-0 z-30 transition-all duration-300 ${g.header}`}>
+          <div className="flex items-center">
+            <span className={`text-2xl font-black tracking-tight transition-colors ${
+              theme === 'oscuro' ? 'text-white' :
+              theme === 'coquette' ? 'text-[#4c282c]' :
+              'text-slate-900'
+            }`}>
+              {headerTitleMap[activeTab]}
+            </span>
+          </div>
+
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+
+            <div ref={searchRef} className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400/80" size={15} />
               <input
                 type="text"
-                placeholder="Buscar cursos, notas..."
-                className={`pl-10 pr-4 py-2 border border-transparent rounded-full text-xs w-64 outline-none ${s.searchInput}`}
+                placeholder="Buscar cursos, notas, módulos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-10 pr-8 py-2 border rounded-full text-xs w-64 outline-none transition-all duration-300 ${g.searchInput}`}
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className={`absolute top-full right-0 mt-2 w-72 rounded-2xl border p-2 shadow-2xl z-50 transition-all ${g.dropdownPanel}`}>
+                  <div className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100/10 mb-1">
+                    Secciones del Portal
+                  </div>
+                  <div className="space-y-0.5">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.section}
+                        onClick={() => {
+                          setActiveTab(result.section);
+                          setSearchQuery('');
+                        }}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs text-left transition-colors font-semibold group cursor-pointer ${g.dropdownItemHover}`}
+                      >
+                        <span>{result.label}</span>
+                        <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {searchQuery.trim() !== '' && searchResults.length === 0 && (
+                <div className={`absolute top-full right-0 mt-2 w-72 rounded-2xl border p-4 text-center text-xs text-gray-400 shadow-2xl ${g.dropdownPanel}`}>
+                  No se encontraron módulos con ese nombre.
+                </div>
+              )}
             </div>
-            <button className="p-2 rounded-full relative text-gray-400 hover:bg-gray-100">
-              <Bell size={18} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
-            </button>
+
+            <div ref={notificationRef} className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className={`p-2 rounded-full transition-colors relative cursor-pointer ${g.notificationBtn}`}
+              >
+                <Bell size={18} />
+                {notifications.some(n => n.unread) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className={`absolute right-0 mt-2 w-80 rounded-2xl border p-2 shadow-2xl z-50 text-left transition-all animate-in fade-in slide-in-from-top-3 duration-150 ${g.dropdownPanel}`}>
+                  <div className="p-3 border-b border-gray-100/10 flex justify-between items-center">
+                    <span className="font-bold text-xs">Notificaciones Académicas</span>
+                    <span className="text-[9px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-bold">UMG</span>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-100/10">
+                    {notifications.map((n) => (
+                      <div key={n.id} className="p-3 hover:bg-gray-50/5 dark:hover:bg-slate-800/50 transition-colors relative group">
+                        {n.unread && (
+                          <span className="absolute top-4 right-3 w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                        )}
+                        <div className="flex items-start space-x-2">
+                          <Info size={13} className="mt-0.5 text-gray-400 shrink-0" />
+                          <div>
+                            <p className="font-bold text-xs pr-2">{n.title}</p>
+                            <p className="text-gray-400 text-[11px] mt-0.5 leading-relaxed">{n.desc}</p>
+                            <p className="text-[10px] text-gray-500 mt-1 font-medium">{n.time}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 select-none ${g.shieldBox}`}>
+              <ShieldCheck size={18} className={theme === 'coquette' ? 'text-white' : 'text-blue-400'} />
+            </div>
+
           </div>
         </header>
 
-        <section className={`flex-1 overflow-y-auto p-8 text-left ${s.sectionBg}`}>
+        <section className={`flex-1 overflow-y-auto p-6 text-left transition-all duration-300 ${g.bodySection}`}>
           {children}
         </section>
       </main>
+
     </div>
   );
 };
