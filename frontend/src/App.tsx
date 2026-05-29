@@ -9,7 +9,7 @@ import { useAuth } from "./context/useAuth";
 import { LoginView } from "./views/auth/LoginView";
 import { AdminDashboard } from "./views/usuarios/admin/AdminDashboard";
 import { DocenteDashboard } from "./views/usuarios/docente/DocenteDashboard";
-import { EstudianteDashboardView } from "./views/estudiante/EstudianteDashboardView";
+import { EstudianteDashboard } from "./views/usuarios/estudiante/EstudianteDashboard";
 import "./App.css";
 
 function DashboardSelector() {
@@ -28,7 +28,7 @@ function DashboardSelector() {
   }
 
   if (user.rol === "ESTUDIANTE") {
-    return <EstudianteDashboardView />;
+    return <EstudianteDashboard />;
   }
 
   return <Navigate to="/" replace />;
