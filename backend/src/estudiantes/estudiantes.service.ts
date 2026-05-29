@@ -18,30 +18,29 @@ export class EstudiantesService {
     if (usuario.rol !== 'estudiante')
       throw new ConflictException('El usuario no tiene rol de estudiante');
 
-    //Control de error
-    const yaRegistrado = await this.prisma.estudiantes.findUnique({
-      where: { id_usuario: createEstudianteDto.id_usuario },
-    });
-    if (yaRegistrado)
-      throw new ConflictException(
-        'Este usuario ya está registrado como estudiante',
-      );
-
-    //Verificar que la carrera exista
     const carrera = await this.prisma.carreras.findUnique({
       where: { id_carrera: createEstudianteDto.id_carrera },
     });
     if (!carrera) throw new NotFoundException('Carrera no encontrada');
 
-    //Verificar carnet único
-    const existente = await this.prisma.estudiantes.findUnique({
-      where: { carnet: createEstudianteDto.carnet },
-    });
-    if (existente) throw new ConflictException('El carnet ya está registrado');
+    return this.prisma.$transaction(async (tx) => {
+      const yaRegistrado = await tx.estudiantes.findUnique({
+        where: { id_usuario: createEstudianteDto.id_usuario },
+      });
+      if (yaRegistrado)
+        throw new ConflictException(
+          'Este usuario ya está registrado como estudiante',
+        );
 
-    return this.prisma.estudiantes.create({
-      data: createEstudianteDto,
-      include: { Usuarios: true, Carreras: true },
+      const existente = await tx.estudiantes.findUnique({
+        where: { carnet: createEstudianteDto.carnet },
+      });
+      if (existente) throw new ConflictException('El carnet ya está registrado');
+
+      return tx.estudiantes.create({
+        data: createEstudianteDto,
+        include: { Usuarios: true, Carreras: true },
+      });
     });
   }
 

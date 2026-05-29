@@ -15,15 +15,17 @@ export class DocentesService {
     if (usuario.rol !== 'docente')
       throw new ConflictException('El usuario no tiene rol de docente');
 
-    const yaRegistrado = await this.prisma.docentes.findUnique({
-      where: { id_usuario: dto.id_usuario },
-    });
-    if (yaRegistrado)
-      throw new ConflictException('Este usuario ya está registrado como docente');
+    return this.prisma.$transaction(async (tx) => {
+      const yaRegistrado = await tx.docentes.findUnique({
+        where: { id_usuario: dto.id_usuario },
+      });
+      if (yaRegistrado)
+        throw new ConflictException('Este usuario ya está registrado como docente');
 
-    return this.prisma.docentes.create({
-      data: dto,
-      include: { Usuarios: true },
+      return tx.docentes.create({
+        data: dto,
+        include: { Usuarios: true },
+      });
     });
   }
 

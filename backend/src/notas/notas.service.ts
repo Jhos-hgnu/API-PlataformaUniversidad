@@ -12,30 +12,32 @@ export class NotasService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateNotaDto) {
-    const inscripcion = await this.prisma.inscripciones.findUnique({
-      where: { id_inscripcion: dto.id_inscripcion },
-    });
-    if (!inscripcion)
-      throw new NotFoundException('Inscripción no encontrada');
+    return this.prisma.$transaction(async (tx) => {
+      const inscripcion = await tx.inscripciones.findUnique({
+        where: { id_inscripcion: dto.id_inscripcion },
+      });
+      if (!inscripcion)
+        throw new NotFoundException('Inscripción no encontrada');
 
-    const existente = await this.prisma.notas.findUnique({
-      where: { id_inscripcion: dto.id_inscripcion },
-    });
-    if (existente)
-      throw new ConflictException(
-        'La inscripción ya tiene una nota asignada',
-      );
+      const existente = await tx.notas.findUnique({
+        where: { id_inscripcion: dto.id_inscripcion },
+      });
+      if (existente)
+        throw new ConflictException(
+          'La inscripción ya tiene una nota asignada',
+        );
 
-    return this.prisma.notas.create({
-      data: dto,
-      include: {
-        Inscripciones: {
-          include: {
-            Estudiantes: { include: { Usuarios: true } },
-            Asignaciones: { include: { Cursos: true, Periodos: true } },
+      return tx.notas.create({
+        data: dto,
+        include: {
+          Inscripciones: {
+            include: {
+              Estudiantes: { include: { Usuarios: true } },
+              Asignaciones: { include: { Cursos: true, Periodos: true } },
+            },
           },
         },
-      },
+      });
     });
   }
 

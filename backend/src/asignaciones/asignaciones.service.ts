@@ -33,27 +33,29 @@ export class AsignacionesService {
     });
     if (!periodo) throw new NotFoundException('Periodo no encontrado');
 
-    const duplicado = await this.prisma.asignaciones.findFirst({
-      where: {
-        id_docente: dto.id_docente,
-        id_curso: dto.id_curso,
-        id_periodo: dto.id_periodo,
-        seccion: dto.seccion,
-        estado: true,
-      },
-    });
-    if (duplicado)
-      throw new ConflictException(
-        'Ya existe una asignación activa con esos mismos datos',
-      );
+    return this.prisma.$transaction(async (tx) => {
+      const duplicado = await tx.asignaciones.findFirst({
+        where: {
+          id_docente: dto.id_docente,
+          id_curso: dto.id_curso,
+          id_periodo: dto.id_periodo,
+          seccion: dto.seccion,
+          estado: true,
+        },
+      });
+      if (duplicado)
+        throw new ConflictException(
+          'Ya existe una asignación activa con esos mismos datos',
+        );
 
-    return this.prisma.asignaciones.create({
-      data: dto,
-      include: {
-        Docentes: { include: { Usuarios: true } },
-        Cursos: true,
-        Periodos: true,
-      },
+      return tx.asignaciones.create({
+        data: dto,
+        include: {
+          Docentes: { include: { Usuarios: true } },
+          Cursos: true,
+          Periodos: true,
+        },
+      });
     });
   }
 
