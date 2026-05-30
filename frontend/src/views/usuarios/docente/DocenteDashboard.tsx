@@ -1,37 +1,46 @@
-import React, { useState } from 'react';
-import { DocenteLayout } from '../../../layouts/DocenteLayout';
-import { Cursos } from './Cursos';
-import { ControlNotas } from './ControlNotas';
-import { Estudiantes } from './Estudiantes';
-import { Mensajes } from './Mensajes';
-import { ConfiguracionDoc } from './ConfiguracionDoc';
-import { TableroDoc } from './TableroDoc';
+import React, { useState } from "react";
+import { DocenteLayout } from "../../../layouts/DocenteLayout";
+import { Cursos } from "./Cursos";
+import { ControlNotas } from "./ControlNotas";
+import { Estudiantes } from "./Estudiantes";
+import { Mensajes } from "./Mensajes";
+import { ConfiguracionDoc } from "./ConfiguracionDoc";
+import { TableroDoc } from "./TableroDoc";
 
-type Section = 'tablero' | 'cursos' | 'notas' | 'estudiantes' | 'mensajes' | 'config';
+type Section =
+  | "tablero"
+  | "cursos"
+  | "notas"
+  | "estudiantes"
+  | "mensajes"
+  | "config";
 
 export const DocenteDashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<Section>('tablero');
+  const [activeSection, setActiveSection] = useState<Section>("tablero");
 
   const handleSetActiveSection = (section: Section) => {
     setActiveSection(section);
   };
 
+  // ENRUTAMIENTO Y RENDERIZADO DE SECCIONES INTERNAS
   const renderContent = () => {
     switch (activeSection) {
-      case 'tablero':
+      case "tablero":
         return <TableroDoc setActiveSection={handleSetActiveSection} />;
-      case 'cursos':
+      case "cursos":
         return <Cursos />;
-      case 'notas':
+      case "notas":
         return <ControlNotas />;
-      case 'estudiantes':
+      case "estudiantes":
         return <Estudiantes />;
-      case 'mensajes':
+      case "mensajes":
         return <Mensajes />;
-      case 'config':
+      case "config":
         return <ConfiguracionDoc />;
       default:
-        return <div className="w-full h-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50" />;
+        return (
+          <div className="w-full h-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50" />
+        );
     }
   };
 

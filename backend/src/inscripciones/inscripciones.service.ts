@@ -7,7 +7,6 @@ import {
 import { CreateInscripcioneDto } from './dto/create-inscripcione.dto';
 import { UpdateInscripcioneDto } from './dto/update-inscripcione.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Inscripciones } from '../../generated/prisma/index';
 
 @Injectable()
 export class InscripcionesService {

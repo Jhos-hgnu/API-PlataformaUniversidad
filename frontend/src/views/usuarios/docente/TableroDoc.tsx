@@ -1,17 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../../context/useAuth';
-import { Users, BookOpen, GraduationCap, AlertCircle, ArrowUpRight, PlusCircle, FileSpreadsheet, Clock } from 'lucide-react';
-import { getThemeStyles } from '../../../utils/themeStyles';
-import { docentesService } from '../../../services/docentes.service';
-import { asignacionesService, type Asignacion } from '../../../services/asignaciones.service';
-import { inscripcionesService } from '../../../services/inscripciones.service';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../../context/useAuth";
+import {
+  Users,
+  BookOpen,
+  GraduationCap,
+  ArrowUpRight,
+  PlusCircle,
+  FileSpreadsheet,
+  Clock,
+  LayoutDashboard,
+} from "lucide-react";
+import { getThemeStyles } from "../../../utils/themeStyles";
+import { docentesService } from "../../../services/docentes.service";
+import {
+  asignacionesService,
+  type Asignacion,
+} from "../../../services/asignaciones.service";
+import { inscripcionesService } from "../../../services/inscripciones.service";
 
-type Section = 'tablero' | 'cursos' | 'notas' | 'estudiantes' | 'mensajes' | 'config';
+type Section =
+  | "tablero"
+  | "cursos"
+  | "notas"
+  | "estudiantes"
+  | "mensajes"
+  | "config";
 
-export const TableroDoc: React.FC<{ setActiveSection: (section: Section) => void }> = ({ setActiveSection }) => {
+export const TableroDoc: React.FC<{
+  setActiveSection: (section: Section) => void;
+}> = ({ setActiveSection }) => {
   const { theme, user } = useAuth();
   const globalStyles = getThemeStyles(theme);
-  const nombreDocente = user?.nombre || 'Docente';
+  const nombreDocente = user?.nombre || "Docente";
 
   const [docenteId, setDocenteId] = useState<number | null>(null);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
@@ -20,15 +40,22 @@ export const TableroDoc: React.FC<{ setActiveSection: (section: Section) => void
 
   useEffect(() => {
     if (!user) return;
-    docentesService.getAll().then(res => {
-      const docente = res.data.find(d => d.id_usuario === user.id);
-      if (docente) setDocenteId(docente.id_docente);
-    }).catch(() => {});
+    docentesService
+      .getAll()
+      .then((res) => {
+        const docente = res.data.find((d) => d.id_usuario === user.id);
+        if (docente) setDocenteId(docente.id_docente);
+      })
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {
     if (!docenteId) return;
-    setLoading(true);
+
+    const timer = setTimeout(() => {
+      setLoading(true);
+    }, 0);
+
     Promise.all([
       asignacionesService.getByDocente(docenteId),
       inscripcionesService.getAll(),
@@ -37,165 +64,259 @@ export const TableroDoc: React.FC<{ setActiveSection: (section: Section) => void
         const asignacionesData = aRes.data;
         setAsignaciones(asignacionesData);
 
-        const asignacionIds = new Set(asignacionesData.map(a => a.id_asignacion));
+        const asignacionIds = new Set(
+          asignacionesData.map((a) => a.id_asignacion),
+        );
         const estudiantesSet = new Set(
-          iRes.data.filter(i => asignacionIds.has(i.id_asignacion)).map(i => i.id_estudiante)
+          iRes.data
+            .filter((i) => asignacionIds.has(i.id_asignacion))
+            .map((i) => i.id_estudiante),
         );
         setTotalEstudiantes(estudiantesSet.size);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        console.error("Error cargando el tablero:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    return () => clearTimeout(timer);
   }, [docenteId]);
 
+  // KPIs estructurados exactamente igual que en Cursos.tsx
   const kpis = [
-    { id: 1, label: 'Total Estudiantes', valor: loading ? '...' : String(totalEstudiantes), icon: <Users size={20} />, color: 'bg-blue-500/10 text-blue-500' },
-    { id: 2, label: 'Cursos Asignados', valor: loading ? '...' : String(asignaciones.length), icon: <BookOpen size={20} />, color: 'bg-emerald-500/10 text-emerald-500' },
-    { id: 3, label: 'Actas por Cerrar', valor: loading ? '...' : '0', icon: <GraduationCap size={20} />, color: 'bg-amber-500/10 text-amber-500' },
-    { id: 4, label: 'Avisos de Coordinación', valor: '0', icon: <AlertCircle size={20} />, color: 'bg-rose-500/10 text-rose-500' },
+    {
+      id: 1,
+      label: "Total Estudiantes",
+      valor: loading ? "..." : `${totalEstudiantes} Estudiantes`,
+      icon: <Users className="text-purple-500" size={16} />,
+    },
+    {
+      id: 2,
+      label: "Cursos Asignados",
+      valor: loading ? "..." : `${asignaciones.length} Cursos`,
+      icon: <BookOpen className="text-blue-500" size={16} />,
+    },
+    {
+      id: 3,
+      label: "Actas por Cerrar",
+      valor: loading ? "..." : "0 Actas",
+      icon: <GraduationCap className="text-amber-500" size={16} />,
+    },
   ];
 
-  const obtenerEstilosTablero = () => {
+  const isDark = theme === "oscuro";
+  const isCoquette = theme === "coquette";
+
+  const obtenerEstilosInternos = () => {
     switch (theme) {
-      case 'oscuro':
-        return {
-          card: 'bg-slate-800 border-slate-700 text-white',
-          textMuted: 'text-slate-400',
-          title: 'text-slate-100',
-          bgMiniCard: 'bg-slate-900 border-slate-700',
-          actionBtn: 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600',
-          progressBg: 'bg-slate-700',
-          accentText: 'text-blue-400'
-        };
-      case 'coquette':
-        return {
-          card: 'bg-white border-[#fbcdd4] text-[#6d4c51]',
-          textMuted: 'text-[#b3888d]',
-          title: 'text-slate-900 font-bold',
-          bgMiniCard: 'bg-[#fffafb] border-[#fbcdd4]',
-          actionBtn: 'bg-[#fff5f6] hover:bg-[#fbcdd4]/30 text-[#6d4c51] border-[#fbcdd4]',
-          progressBg: 'bg-[#fff5f6]',
-          accentText: 'text-[#f472b6]'
-        };
-      case 'claro':
+      case "oscuro":
+        return { desc: "text-slate-400" };
+      case "coquette":
+        return { desc: "text-[#b3888d]" };
+      case "claro":
       default:
-        return {
-          card: 'bg-white border-gray-100 text-slate-800',
-          textMuted: 'text-gray-400',
-          title: 'text-slate-800 font-bold',
-          bgMiniCard: 'bg-gray-50/50 border-gray-100',
-          actionBtn: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200',
-          progressBg: 'bg-gray-100',
-          accentText: 'text-[#1a365d]'
-        };
+        return { desc: "text-gray-400" };
     }
   };
 
-  const t = obtenerEstilosTablero();
+  const c = obtenerEstilosInternos();
+  const titleColor = isDark ? "#f8fafc" : isCoquette ? "#6d4c51" : "#0f172a";
 
   return (
-    <div className="space-y-6 transition-colors duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
+    <div
+      className={`space-y-6 transition-all duration-300 w-full ${globalStyles.page}`}
+    >
+      {/* ENCABEZADO DE SECCIÓN ADAPTATIVO */}
+      <div className="flex items-center space-x-3 text-left">
+        <div
+          className={`p-3 rounded-xl ${isDark ? "bg-slate-800 text-slate-200" : isCoquette ? "bg-[#fff5f6] text-[#f472b6]" : "bg-slate-100 text-slate-700"}`}
+        >
+          <LayoutDashboard size={22} />
+        </div>
         <div>
-          <h2 className="text-xl font-black tracking-tight" style={{ color: theme === 'oscuro' ? '#f8fafc' : theme === 'coquette' ? '#6d4c51' : '#0f172a' }}>
+          <h2
+            className="text-base font-bold transition-colors"
+            style={{ color: titleColor }}
+          >
             Panel del Docente
           </h2>
-          <p className={`text-xs ${globalStyles.mutedText}`}>
-            Bienvenido de nuevo, <span className="font-semibold">{nombreDocente}</span>. Aquí tienes el balance de tus aulas y actas académicas vigentes.
+          <p className={`text-xs transition-colors ${c.desc}`}>
+            Bienvenido de nuevo,{" "}
+            <span className="font-semibold">{nombreDocente}</span>. Aquí tienes
+            el balance de tus aulas y actas académicas vigentes.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* BLOQUE DE TARJETAS DE MÉTRICAS (Estilo Cursos.tsx) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-left">
         {kpis.map((kpi) => (
-          <div key={kpi.id} className={`border rounded-2xl p-5 shadow-xs transition-all text-left ${t.card}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className={`p-2.5 rounded-xl ${kpi.color}`}>{kpi.icon}</div>
-              <span className={`text-[10px] font-bold uppercase tracking-wider ${t.textMuted}`}>Ciclo Activo</span>
+          <div
+            key={kpi.id}
+            className={`p-5 rounded-2xl border ${isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-white border-transparent shadow-xs"}`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                {kpi.label}
+              </span>
+              {kpi.icon}
             </div>
-            <p className={`text-[11px] font-medium uppercase tracking-wider ${t.textMuted}`}>{kpi.label}</p>
-            <h3 className="text-2xl font-black tracking-tight mt-0.5">{kpi.valor}</h3>
+            <p className="text-xl font-black">{kpi.valor}</p>
           </div>
         ))}
       </div>
 
+      {/* BLOQUES INFERIORES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-        <div className={`lg:col-span-2 border rounded-2xl p-5 shadow-xs ${t.card}`}>
-          <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-4">
-            <FileSpreadsheet size={14} className={t.accentText} />
+        {/* COLUMNA IZQUIERDA: GRÁFICO / OCUPACIÓN */}
+        <div
+          className={`border rounded-2xl p-5 lg:col-span-2 ${isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-white border-transparent shadow-xs"}`}
+        >
+          <h3
+            className={`text-[10px] font-bold uppercase tracking-wider flex items-center space-x-2 mb-4 ${isDark ? "text-slate-400" : isCoquette ? "text-[#b3888d]" : "text-gray-400"}`}
+          >
+            <FileSpreadsheet size={14} className="text-blue-500" />
             <span>Ocupación de Estudiantes por Curso</span>
           </h3>
-
           <div className="space-y-5">
             {loading ? (
-              <p className="text-xs text-gray-400">Cargando cursos...</p>
+              <div className="text-xs text-gray-400 font-medium">
+                Cargando cursos...
+              </div>
             ) : asignaciones.length > 0 ? (
               asignaciones.map((a) => {
                 const cupoMax = a.Cursos?.cupo_maximo ?? 0;
                 const inscritos = cupoMax - a.cupo_disponible;
-                const pct = cupoMax > 0 ? Math.round((inscritos / cupoMax) * 100) : 0;
+                const pct =
+                  cupoMax > 0 ? Math.round((inscritos / cupoMax) * 100) : 0;
                 const lleno = a.cupo_disponible <= 0;
                 return (
                   <div key={a.id_asignacion}>
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span>{a.Cursos?.nombre} — Sección {a.seccion}</span>
-                      <span className={lleno ? 'text-amber-500 font-bold' : t.textMuted}>
+                    <div className="flex justify-between text-xs font-bold mb-1">
+                      <span
+                        className={isDark ? "text-slate-200" : "text-slate-800"}
+                      >
+                        {a.Cursos?.nombre} — Sección {a.seccion}
+                      </span>
+                      <span
+                        className={
+                          lleno
+                            ? "text-amber-600"
+                            : isDark
+                              ? "text-slate-400"
+                              : "text-slate-500"
+                        }
+                      >
                         {inscritos} / {cupoMax} Alumnos ({pct}%)
                       </span>
                     </div>
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${t.progressBg}`}>
-                      <div className={`h-full rounded-full ${lleno ? 'bg-amber-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                    <div className="w-full bg-gray-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${lleno ? "bg-amber-500" : "bg-blue-600"}`}
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-xs text-gray-400">No tienes cursos asignados en este ciclo.</p>
+              <div className="text-xs text-gray-400 font-medium">
+                No tienes cursos asignados en este ciclo.
+              </div>
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-100/10 flex justify-end">
-            <button onClick={() => setActiveSection('cursos')} className={`text-xs font-bold flex items-center space-x-1 cursor-pointer transition-colors ${t.accentText}`}>
+          <div
+            className={`mt-6 pt-4 border-t flex justify-end ${isDark ? "border-slate-800" : "border-gray-100/70"}`}
+          >
+            <button
+              onClick={() => setActiveSection("cursos")}
+              className={`text-xs font-bold flex items-center space-x-1 cursor-pointer transition-colors ${isCoquette ? "text-[#f472b6]" : "text-blue-500"}`}
+            >
               <span>Gestionar Mis Cursos</span>
               <ArrowUpRight size={14} />
             </button>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className={`border rounded-2xl p-5 shadow-xs ${t.card}`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-3">
-              <PlusCircle size={14} className={t.accentText} />
+        {/* COLUMNA DERECHA: ACCESOS RÁPIDOS Y ACTIVIDAD RECIENTE */}
+        <div className="space-y-5">
+          {/* ACCESOS RÁPIDOS */}
+          <div
+            className={`border rounded-2xl p-5 ${isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-white border-transparent shadow-xs"}`}
+          >
+            <h3
+              className={`text-[10px] font-bold uppercase tracking-wider flex items-center space-x-2 mb-3 ${isDark ? "text-slate-400" : isCoquette ? "text-[#b3888d]" : "text-gray-400"}`}
+            >
+              <PlusCircle size={14} className="text-purple-500" />
               <span>Accesos Rápidos</span>
             </h3>
             <div className="grid grid-cols-1 gap-2">
-              <button onClick={() => setActiveSection('notas')} className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${t.actionBtn}`}>
+              <button
+                onClick={() => setActiveSection("notas")}
+                className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900 hover:bg-slate-800 text-slate-200 border-transparent"
+                    : "bg-gray-50 hover:bg-gray-100/70 text-slate-700 border-transparent"
+                }`}
+              >
                 <span>Ingresar Calificaciones</span>
                 <ArrowUpRight size={13} className="opacity-60" />
               </button>
-              <button onClick={() => setActiveSection('estudiantes')} className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${t.actionBtn}`}>
+              <button
+                onClick={() => setActiveSection("cursos")}
+                className={`w-full py-2.5 px-4 border text-left rounded-xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                  isDark
+                    ? "bg-slate-900 hover:bg-slate-800 text-slate-200 border-transparent"
+                    : "bg-gray-50 hover:bg-gray-100/70 text-slate-700 border-transparent"
+                }`}
+              >
                 <span>Ver Estudiantes</span>
                 <ArrowUpRight size={13} className="opacity-60" />
               </button>
             </div>
           </div>
 
-          <div className={`border rounded-2xl p-5 shadow-xs ${t.card}`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider flex items-center space-x-2 mb-3">
-              <Clock size={14} className={t.accentText} />
+          {/* ACTIVIDAD EN AULAS */}
+          <div
+            className={`border rounded-2xl p-5 ${isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-white border-transparent shadow-xs"}`}
+          >
+            <h3
+              className={`text-[10px] font-bold uppercase tracking-wider flex items-center space-x-2 mb-3 ${isDark ? "text-slate-400" : isCoquette ? "text-[#b3888d]" : "text-gray-400"}`}
+            >
+              <Clock size={14} className="text-amber-500" />
               <span>Actividad en tus Aulas</span>
             </h3>
             <div className="space-y-3">
               {asignaciones.length > 0 ? (
                 asignaciones.slice(0, 3).map((a) => (
-                  <div key={a.id_asignacion} className={`p-2.5 rounded-xl border text-[11px] ${t.bgMiniCard}`}>
-                    <div className="flex justify-between font-bold text-slate-700 dark:text-slate-200">
-                      <span className="truncate max-w-[140px] text-blue-600 dark:text-blue-400">{a.Cursos?.nombre}</span>
+                  <div
+                    key={a.id_asignacion}
+                    className={`p-3 rounded-xl border text-[11px] ${
+                      isDark
+                        ? "bg-slate-900 border-slate-800"
+                        : "bg-gray-50/70 border-transparent"
+                    }`}
+                  >
+                    <div className="flex justify-between font-bold">
+                      <span className="truncate max-w-[140px] text-blue-500">
+                        {a.Cursos?.nombre}
+                      </span>
                     </div>
-                    <p className={`mt-0.5 ${t.textMuted} truncate`}>Sección {a.seccion} — {a.cupo_disponible} cupos disponibles</p>
+                    <p
+                      className={`mt-0.5 font-medium truncate ${isDark ? "text-slate-400" : isCoquette ? "text-[#b3888d]" : "text-gray-500"}`}
+                    >
+                      Sección {a.seccion} — {a.cupo_disponible} cupos
+                      disponibles
+                    </p>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-gray-400">Sin actividad reciente.</p>
+                <div className="text-xs text-gray-400 font-medium">
+                  Sin actividad reciente.
+                </div>
               )}
             </div>
           </div>
