@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'DOCENTE' | 'ESTUDIANTE';
+export type Role = 'admin' | 'docente' | 'estudiante';
 export type Theme = 'claro' | 'oscuro' | 'coquette';
 
 export interface User {

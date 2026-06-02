@@ -25,11 +25,11 @@ export const LoginView: React.FC = () => {
 
   // Si el usuario ya está autenticado, mandarlo a su dashboard según rol
   React.useEffect(() => {
-    if (user?.rol === "ADMIN") {
+    if (user?.rol === "admin") {
       navigate("/admin", { replace: true });
-    } else if (user?.rol === "DOCENTE") {
+    } else if (user?.rol === "docente") {
       navigate("/docente", { replace: true });
-    } else if (user?.rol === "ESTUDIANTE") {
+    } else if (user?.rol === "estudiante") {
       navigate("/estudiante", { replace: true });
     }
   }, [user, navigate]);
@@ -41,7 +41,7 @@ export const LoginView: React.FC = () => {
     try {
       const res = await authService.login({ correo, password });
       const data = res.data;
-      const usuario = { ...data.usuario, rol: data.usuario.rol.toUpperCase() as const };
+      const usuario = data.usuario;
       login(data.access_token, usuario);
       navigate("/", { replace: true });
     } catch (err: any) {

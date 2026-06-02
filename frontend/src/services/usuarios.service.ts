@@ -24,6 +24,7 @@ export interface UpdateUsuarioRequest {
   correo?: string;
   password?: string;
   rol?: 'admin' | 'docente' | 'estudiante';
+  estado?: boolean;
 }
 
 export const usuariosService = {

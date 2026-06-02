@@ -1,10 +1,12 @@
 import { api } from './api';
+import type { Curso } from './cursos.service';
 
 export interface Carrera {
   id_carrera: number;
   nombre: string;
   descripcion: string | null;
   estado: boolean;
+  Cursos?: Curso[];
 }
 
 export interface CreateCarreraRequest {
@@ -15,6 +17,7 @@ export interface CreateCarreraRequest {
 export interface UpdateCarreraRequest {
   nombre?: string;
   descripcion?: string;
+  estado?: boolean;
 }
 
 export const carrerasService = {

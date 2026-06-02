@@ -47,4 +47,17 @@ export class CarrerasService {
       data: { estado: false },
     });
   }
+
+  async restore(id: number) {
+    const carrera = await this.prisma.carreras.findUnique({
+      where: { id_carrera: id },
+    });
+    if (!carrera) throw new NotFoundException('Carrera no encontrada');
+    if (carrera.estado)
+      throw new ConflictException('La carrera ya está activa');
+    return this.prisma.carreras.update({
+      where: { id_carrera: id },
+      data: { estado: true },
+    });
+  }
 }

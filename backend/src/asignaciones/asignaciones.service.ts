@@ -52,7 +52,7 @@ export class AsignacionesService {
         data: dto,
         include: {
           Docentes: { include: { Usuarios: true } },
-          Cursos: true,
+          Cursos: { include: { Carreras: true } },
           Periodos: true,
         },
       });
@@ -64,7 +64,7 @@ export class AsignacionesService {
       where: { estado: true },
       include: {
         Docentes: { include: { Usuarios: true } },
-        Cursos: true,
+        Cursos: { include: { Carreras: true } },
         Periodos: true,
       },
     });
@@ -75,7 +75,7 @@ export class AsignacionesService {
       where: { id_asignacion: id },
       include: {
         Docentes: { include: { Usuarios: true } },
-        Cursos: true,
+        Cursos: { include: { Carreras: true } },
         Periodos: true,
       },
     });
@@ -86,7 +86,7 @@ export class AsignacionesService {
   async findByDocente(idDocente: number) {
     return this.prisma.asignaciones.findMany({
       where: { id_docente: idDocente, estado: true },
-      include: { Cursos: true, Periodos: true },
+      include: { Cursos: { include: { Carreras: true } }, Periodos: true },
     });
   }
 
@@ -95,7 +95,7 @@ export class AsignacionesService {
       where: { id_periodo: idPeriodo, estado: true },
       include: {
         Docentes: { include: { Usuarios: true } },
-        Cursos: true,
+        Cursos: { include: { Carreras: true } },
       },
     });
   }
@@ -126,7 +126,7 @@ export class AsignacionesService {
     } else if (dto.cupo_disponible !== undefined) {
       const asignacion = await this.prisma.asignaciones.findUnique({
         where: { id_asignacion: id },
-        include: { Cursos: true },
+        include: { Cursos: { include: { Carreras: true } } },
       });
       if (!asignacion) throw new NotFoundException('Asignación no encontrada');
       if (dto.cupo_disponible > asignacion.Cursos.cupo_maximo)
@@ -162,7 +162,7 @@ export class AsignacionesService {
       data: dto,
       include: {
         Docentes: { include: { Usuarios: true } },
-        Cursos: true,
+        Cursos: { include: { Carreras: true } },
         Periodos: true,
       },
     });

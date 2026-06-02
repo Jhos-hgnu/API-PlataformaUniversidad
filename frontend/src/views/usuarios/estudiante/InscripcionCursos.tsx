@@ -50,13 +50,12 @@ export const InscripcionCursos: React.FC = () => {
         setEstudianteId(eId);
         return Promise.all([
           asignacionesService.getAll(),
-          inscripcionesService.getAll(),
-          Promise.resolve(eId),
+          inscripcionesService.getByEstudiante(eId),
         ]);
       })
-      .then(([aRes, iRes, eId]) => {
+      .then(([aRes, iRes]) => {
         setOfertaAcademica(aRes.data.map(mapToUI));
-        setMisInscripciones(iRes.data.filter(i => i.id_estudiante === eId));
+        setMisInscripciones(iRes.data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateCarreraDto {
   @IsString()
@@ -8,4 +8,8 @@ export class CreateCarreraDto {
   @IsOptional()
   @IsString()
   descripcion?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  estado?: boolean;
 }

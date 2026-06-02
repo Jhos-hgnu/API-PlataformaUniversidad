@@ -33,7 +33,7 @@ export class NotasService {
           Inscripciones: {
             include: {
               Estudiantes: { include: { Usuarios: true } },
-              Asignaciones: { include: { Cursos: true, Periodos: true } },
+              Asignaciones: { include: { Cursos: { include: { Carreras: true } }, Periodos: true } },
             },
           },
         },
@@ -48,7 +48,7 @@ export class NotasService {
         Inscripciones: {
           include: {
             Estudiantes: { include: { Usuarios: true } },
-            Asignaciones: { include: { Cursos: true, Periodos: true } },
+            Asignaciones: { include: { Cursos: { include: { Carreras: true } }, Periodos: true } },
           },
         },
       },
@@ -62,7 +62,7 @@ export class NotasService {
         Inscripciones: {
           include: {
             Estudiantes: { include: { Usuarios: true } },
-            Asignaciones: { include: { Cursos: true, Periodos: true } },
+            Asignaciones: { include: { Cursos: { include: { Carreras: true } }, Periodos: true } },
           },
         },
       },
@@ -78,7 +78,7 @@ export class NotasService {
         Inscripciones: {
           include: {
             Estudiantes: { include: { Usuarios: true } },
-            Asignaciones: { include: { Cursos: true, Periodos: true } },
+            Asignaciones: { include: { Cursos: { include: { Carreras: true } }, Periodos: true } },
           },
         },
       },
@@ -111,7 +111,7 @@ export class NotasService {
         Inscripciones: {
           include: {
             Estudiantes: { include: { Usuarios: true } },
-            Asignaciones: { include: { Cursos: true, Periodos: true } },
+            Asignaciones: { include: { Cursos: { include: { Carreras: true } }, Periodos: true } },
           },
         },
       },

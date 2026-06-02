@@ -52,7 +52,11 @@ export class InscripcionesService {
         include: {
           Estudiantes: { include: { Usuarios: true } },
           Asignaciones: {
-            include: { Cursos: true, Periodos: true, Docentes: true },
+            include: {
+              Cursos: { include: { Carreras: true } },
+              Periodos: true,
+              Docentes: true,
+            },
           },
         },
       });
@@ -65,7 +69,11 @@ export class InscripcionesService {
       include: {
         Estudiantes: { include: { Usuarios: true } },
         Asignaciones: {
-          include: { Cursos: true, Periodos: true, Docentes: true },
+          include: {
+            Cursos: { include: { Carreras: true } },
+            Periodos: true,
+            Docentes: true,
+          },
         },
       },
     });
@@ -77,7 +85,11 @@ export class InscripcionesService {
       include: {
         Estudiantes: { include: { Usuarios: true } },
         Asignaciones: {
-          include: { Cursos: true, Periodos: true, Docentes: true },
+          include: {
+            Cursos: { include: { Carreras: true } },
+            Periodos: true,
+            Docentes: true,
+          },
         },
       },
     });
@@ -90,7 +102,11 @@ export class InscripcionesService {
       where: { id_estudiante: idEstudiante, estado: true },
       include: {
         Asignaciones: {
-          include: { Cursos: true, Periodos: true, Docentes: true },
+          include: {
+            Cursos: { include: { Carreras: true } },
+            Periodos: true,
+            Docentes: true,
+          },
         },
       },
     });
@@ -170,7 +186,11 @@ export class InscripcionesService {
         include: {
           Estudiantes: { include: { Usuarios: true } },
           Asignaciones: {
-            include: { Cursos: true, Periodos: true, Docentes: true },
+            include: {
+              Cursos: { include: { Carreras: true } },
+              Periodos: true,
+              Docentes: true,
+            },
           },
         },
       });

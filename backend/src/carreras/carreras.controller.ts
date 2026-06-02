@@ -45,4 +45,10 @@ export class CarrerasController {
   remove(@Param('id') id: string) {
     return this.carrerasService.remove(+id);
   }
+
+  @Patch(':id/restore')
+  @Roles('admin')
+  restore(@Param('id') id: string) {
+    return this.carrerasService.restore(+id);
+  }
 }

@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsIn,
   IsOptional,
@@ -26,4 +27,8 @@ export class CreateUserDto {
   @IsString()
   @IsIn(['admin', 'docente', 'estudiante'], { message: 'Rol no válido' })
   rol?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  estado?: boolean;
 }

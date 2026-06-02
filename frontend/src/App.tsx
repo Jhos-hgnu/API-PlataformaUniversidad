@@ -19,15 +19,15 @@ function DashboardSelector() {
     return <Navigate to="/" replace />;
   }
 
-  if (user.rol === "ADMIN") {
+  if (user.rol === "admin") {
     return <AdminDashboard />;
   }
 
-  if (user.rol === "DOCENTE") {
+  if (user.rol === "docente") {
     return <DocenteDashboard />;
   }
 
-  if (user.rol === "ESTUDIANTE") {
+  if (user.rol === "estudiante") {
     return <EstudianteDashboard />;
   }
 

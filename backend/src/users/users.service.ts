@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -46,15 +50,43 @@ export class UsersService {
     //return `This action returns all users`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { id_usuario: id },
+    });
+    if (!usuario) throw new NotFoundException('Usuario no encontrado');
+    const { password_hash: _, ...usuarioLimpio } = usuario;
+    return usuarioLimpio;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    await this.findOne(id);
+
+    const data: any = {};
+    if (updateUserDto.nombre !== undefined) data.nombre = updateUserDto.nombre;
+    if (updateUserDto.apellido !== undefined)
+      data.apellido = updateUserDto.apellido;
+    if (updateUserDto.correo !== undefined) data.correo = updateUserDto.correo;
+    if (updateUserDto.rol !== undefined) data.rol = updateUserDto.rol;
+    if (updateUserDto.estado !== undefined) data.estado = updateUserDto.estado;
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt(10);
+      data.password_hash = await bcrypt.hash(updateUserDto.password, salt);
+    }
+
+    const usuario = await this.prisma.usuarios.update({
+      where: { id_usuario: id },
+      data,
+    });
+    const { password_hash: _, ...usuarioLimpio } = usuario;
+    return usuarioLimpio;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.usuarios.update({
+      where: { id_usuario: id },
+      data: { estado: false },
+    });
   }
 }
